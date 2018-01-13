@@ -57,7 +57,7 @@ int ReadSpec( const char * FileName, tSpec& Spec ){
 	std::ifstream in( FileName, std::ios::in );
 	std::string line;
 	int nLine;
-	for( nLine = 0; in>>line; nLine++ ){
+	for( nLine = 0; std::getline(in,line); nLine++ ){
 		if( nLine == 0 ){
 			Spec.nBit = line.size();
 			Spec.clear();
