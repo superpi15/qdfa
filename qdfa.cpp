@@ -97,7 +97,6 @@ public:
 				}
 			}
 		}
-		
 		return pRdfa;
 	}
 };
