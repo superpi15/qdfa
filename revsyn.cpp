@@ -1,33 +1,4 @@
-#include <iostream> 
-#include <vector>
-#include <list>
-#include <fstream>
-#include <string>
-
-class tSpec: public  std::vector<std::vector<char> > {
-public:
-	int nBit;
-	tSpec():nBit(0){}
-	void print( std::ostream& ostr ){
-		for( int i=0; i<size(); i++ ){
-			for( int j=0; j<(*this)[i].size(); j++ ){
-				ostr<< ((int)(*this)[i][j]);
-			}
-			ostr<<"\n";
-		}
-	}
-};
-
-class tRevNtk: public 	std::list<std::vector<char> >{
-public:
-	;
-	/*
-	 * dot
-	 * wdot
-	 * not
-	*/
-	;
-};
+#include "revsyn.hpp"
 
 int ReversibleBasic( tSpec& Spec, tRevNtk& RevNtk ){
 	tSpec * pSpecCur , * pSpecPrev;
@@ -75,7 +46,7 @@ int ReversibleBasic( tSpec& Spec, tRevNtk& RevNtk ){
 					(*pSpecCur)[jLine][tarBit] ^= 1;
 			}
 			* pSpecPrev = * pSpecCur;
-			pSpecCur->print(std::cout); printf("\n");
+			//pSpecCur->print(std::cout); printf("\n");
 		}
 	}
 	delete pSpecCur;
@@ -118,10 +89,12 @@ int main( int argc, char * argv[] ){
 	ReadSpec( argv[1], Spec );
 	tRevNtk RevNtk;
 	ReversibleBasic( Spec, RevNtk );
+	RevNtk.print(std::cout);
+	/*
 	for( tRevNtk::iterator itr = RevNtk.begin(); itr!=RevNtk.end(); itr++ ){
 		for( int i = 0; i<itr->size(); i++ ){
 			printf("%c",(*itr)[i]);
 		}
 		printf("\n");
-	}
+	}*/
 }
