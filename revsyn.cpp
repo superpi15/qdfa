@@ -8,9 +8,17 @@ class tSpec: public  std::vector<std::vector<char> > {
 public:
 	int nBit;
 	tSpec():nBit(0){}
+	void print( std::ostream& ostr ){
+		for( int i=0; i<size(); i++ ){
+			for( int j=0; j<(*this)[i].size(); j++ ){
+				ostr<< ((int)(*this)[i][j]);
+			}
+			ostr<<"\n";
+		}
+	}
 };
 
-class tRevNtk: public std::vector<std::vector<char> >{
+class tRevNtk: public 	std::list<std::vector<char> >{
 public:
 	;
 	/*
@@ -28,14 +36,14 @@ int ReversibleBasic( tSpec& Spec, tRevNtk& RevNtk ){
 	*pSpecCur = Spec;
 	*pSpecPrev = Spec;
 	//= Spec;
-	std::list<std::vector<char> > RevTmp;
+	std::list<std::vector<char> >& RevTmp = RevNtk;
 	int LineNum, BitNum;
 	LineNum = Spec.size();
 	BitNum 	= Spec.front().size();
 	// let LocalSpec become ordered binary number
 	for( int nLine = 0; nLine<LineNum; nLine++ ){
 		for( int tarBit = 0; tarBit<BitNum; tarBit++ ){
-			if( (nLine & (1<<tarBit)) == ((*pSpecCur)[nLine][tarBit] == 1 ) )
+			if( (nLine & (1<<tarBit)) ^ ! ((*pSpecCur)[nLine][tarBit] == 1 ) )
 				continue;
 			// encode
 			RevTmp.push_front( tRevNtk::value_type() );
@@ -46,12 +54,12 @@ int ReversibleBasic( tSpec& Spec, tRevNtk& RevNtk ){
 				if( cond == tarBit )
 					continue;
 				if( (*pSpecCur)[nLine][cond] == 1 ){
-					RevTmp.front()[tarBit] = '+';
+					RevTmp.front()[cond] = '+';
 					vDetect[cond] = 1;
 				}
 			}
 			// flip
-			for( int jLine = nLine+1; jLine<LineNum; jLine++ ){
+			for( int jLine = nLine; jLine<LineNum; jLine++ ){
 				bool Reject = 0;
 				for( int kBit = 0; kBit<BitNum; kBit++ ){
 					if( kBit == tarBit )
@@ -66,6 +74,8 @@ int ReversibleBasic( tSpec& Spec, tRevNtk& RevNtk ){
 				if( !Reject )
 					(*pSpecCur)[jLine][tarBit] ^= 1;
 			}
+			* pSpecPrev = * pSpecCur;
+			pSpecCur->print(std::cout); printf("\n");
 		}
 	}
 	delete pSpecCur;
@@ -93,7 +103,9 @@ int ReadSpec( const char * FileName, tSpec& Spec ){
 				return 0;
 			}
 			Spec[nLine][i] = (line[i] == '0') ? 0: 1;
+			//printf("%d",(int)Spec[nLine][i]);
 		}
+		//printf("\n");
 	}
 	in.close();
 	return 1;
@@ -104,4 +116,12 @@ int main( int argc, char * argv[] ){
 		return 0;
 	tSpec Spec;
 	ReadSpec( argv[1], Spec );
+	tRevNtk RevNtk;
+	ReversibleBasic( Spec, RevNtk );
+	for( tRevNtk::iterator itr = RevNtk.begin(); itr!=RevNtk.end(); itr++ ){
+		for( int i = 0; i<itr->size(); i++ ){
+			printf("%c",(*itr)[i]);
+		}
+		printf("\n");
+	}
 }
