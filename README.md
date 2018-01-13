@@ -1,0 +1,2 @@
+# qdfa
+reversible dfa
