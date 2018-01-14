@@ -1,13 +1,14 @@
 #include "revsyn.hpp"
 
-int ReversibleBasic( tSpec& Spec, tRevNtk& RevNtk ){
+tRevNtk * ReversibleBasic( tSpec& Spec ){
 	tSpec * pSpecCur , * pSpecPrev;
 	pSpecCur = new tSpec;
 	pSpecPrev = new tSpec;
 	*pSpecCur = Spec;
 	*pSpecPrev = Spec;
 	//= Spec;
-	std::list<std::vector<char> >& RevTmp = RevNtk;
+	tRevNtk * pRevNtk = new tRevNtk;
+	std::list<std::vector<char> >& RevTmp = * pRevNtk;
 	int LineNum, BitNum;
 	LineNum = Spec.size();
 	BitNum 	= Spec.front().size();
@@ -51,6 +52,7 @@ int ReversibleBasic( tSpec& Spec, tRevNtk& RevNtk ){
 	}
 	delete pSpecCur;
 	delete pSpecPrev;
+	return pRevNtk;
 }
 
 int ReadSpec( const char * FileName, tSpec& Spec ){
@@ -81,20 +83,20 @@ int ReadSpec( const char * FileName, tSpec& Spec ){
 	in.close();
 	return 1;
 }
-
+/*
 int main( int argc, char * argv[] ){
 	if( argc!=2 )
 		return 0;
 	tSpec Spec;
 	ReadSpec( argv[1], Spec );
-	tRevNtk RevNtk;
-	ReversibleBasic( Spec, RevNtk );
-	RevNtk.print(std::cout);
-	/*
+	tRevNtk * pRevNtk = ReversibleBasic( Spec );
+	pRevNtk->print(std::cout);
+	
 	for( tRevNtk::iterator itr = RevNtk.begin(); itr!=RevNtk.end(); itr++ ){
 		for( int i = 0; i<itr->size(); i++ ){
 			printf("%c",(*itr)[i]);
 		}
 		printf("\n");
-	}*/
+	}
 }
+*/

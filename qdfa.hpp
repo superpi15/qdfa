@@ -15,6 +15,7 @@ class tDfa{
 public:
 	typedef std::map<int,int> tTrans;
 	typedef std::map<int,tTrans> tAdj;
+	std::set<int> AlphaBet;
 	bool delta( int state, int input, int * pDes );
 	tAdj adj;
 	int nState;
@@ -127,6 +128,7 @@ public:
 		tRdfa * pRdfa;
 		pRdfa = new tRdfa;
 		pRdfa->nState = pDfa->nState;
+		pRdfa->AlphaBet = pDfa->AlphaBet;
 		tOpMap OpMap;
 		//return pRdfa;
 		for( tSrcLog::iterator itr = SrcLog.begin(); itr != SrcLog.end(); itr++  ){
@@ -142,6 +144,7 @@ public:
 					srcItr++, counter++ ){
 					int ExtInput;
 					ExtInput = input + (counter<<AlphaBetBitNum);
+					pRdfa->AlphaBet.insert(ExtInput);
 					//printf("(%d %d %d %d \n" \
 						,*srcItr,input,ExtInput,des);
 					//pRdfa->adj[*srcItr];

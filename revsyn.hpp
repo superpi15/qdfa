@@ -6,7 +6,7 @@
 #include <list>
 #include <fstream>
 #include <string>
-
+class tRevNtk;
 class tSpec: public  std::vector<std::vector<char> > {
 public:
 	int nBit;
@@ -19,6 +19,7 @@ public:
 			ostr<<"\n";
 		}
 	}
+	int verify( tRevNtk*);
 };
 
 class tRevNtk: public 	std::list<std::vector<char> >{
@@ -27,7 +28,10 @@ public:
 		if( empty() )
 			return ;
 		int nBit = front().size();
+		char buff[256];
 		for( int i=0; i<nBit; i++ ){
+			sprintf( buff, "|%d>", i );
+			printf("%7s ", buff );
 			for( iterator itr = begin(); itr!=end(); itr++ )
 				printf("%c",(*itr)[i]);
 			printf("\n");
@@ -41,7 +45,8 @@ public:
 	;
 };
 
-int ReversibleBasic( tSpec& Spec, tRevNtk& RevNtk );
+tRevNtk * ReversibleBasic( tSpec& Spec );
 int ReadSpec( const char * FileName, tSpec& Spec );
 
 #endif
+
