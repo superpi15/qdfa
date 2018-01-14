@@ -77,6 +77,9 @@ public:
 	tRdfa * convert(){
 		tRdfa * pRdfa;
 		pRdfa = new tRdfa;
+		typedef std::set<std::pair<int,int> > tOpSet;
+		typedef std::map<int,tOpSet> tOpMap;
+		tOpMap OpMap;
 		for( tSrcLog::iterator itr = SrcLog.begin(); itr != SrcLog.end(); itr++  ){
 			int des = itr->first;
 			tFrom& From = itr->second;
@@ -94,8 +97,16 @@ public:
 					ExtInput = input + (counter<<AlphaBetBitNum);
 					pRdfa->adj[*srcItr];
 					pRdfa->adj[*srcItr][ExtInput] = des;
+					OpMap[ExtInput]; 
+					OpMap[ExtInput].insert( 
+						std::pair<int,int>(*srcItr,des) );
 				}
 			}
+		}
+		// reversible transition
+		for( tOpMap::iterator itr = OpMap.begin(); itr!=OpMap.end(); itr++ ){
+			;
+
 		}
 		return pRdfa;
 	}
