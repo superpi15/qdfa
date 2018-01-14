@@ -28,11 +28,13 @@ int ReadDfa( const char * FileName, tDfa& Dfa ){
 	return 1;
 }
 
-tRevNtk * RdfaToRevNtk( tRdfa * pRdfa ){
+tQdfa * RdfaToRevNtk( tRdfa * pRdfa ){
+	tQdfa * pQdfa =new tQdfa;
 	std::vector<int> StateEncode( pRdfa->nState, 0 );
 	for( int i = 0; i<StateEncode.size(); i++ )
 		StateEncode[i] = i;
 	
+	int nQgate = 0;
 	std::set<int>::iterator symbol;
 	for( symbol = pRdfa->AlphaBet.begin(); symbol != pRdfa->AlphaBet.end();
 		symbol++ ){
@@ -64,8 +66,10 @@ tRevNtk * RdfaToRevNtk( tRdfa * pRdfa ){
 		tRevNtk * pRevNtk = ReversibleBasic(Spec);
 		printf("Symbol \'%d\'\n", *symbol );
 		pRevNtk->print( std::cout );
-		delete pRevNtk;
+		pQdfa->OpMap[*symbol] = pRevNtk;
+		nQgate += pRevNtk->size();	
 	}
+	printf("Qgate # %d\n",nQgate);
 }
 /*
 void tSpec::verify( tRevNtk * pRevNtk ){

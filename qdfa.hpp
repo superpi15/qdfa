@@ -10,7 +10,7 @@
 #include <set>
 #include <cmath>
 #include <assert.h>
-
+#include "revsyn.hpp"
 class tDfa{
 public:
 	typedef std::map<int,int> tTrans;
@@ -202,6 +202,13 @@ public:
 		}
 	}
 };
+
+class tQdfa{
+public:
+	typedef std::map<int,tRevNtk*> tOpMap; // alphabet -> Operation
+	std::map<int,tRevNtk*> OpMap;
+};
+
 
 
 #endif
