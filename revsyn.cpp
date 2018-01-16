@@ -1,6 +1,6 @@
 #include "revsyn.hpp"
 
-tRevNtk * ReversibleBasic( tSpec& Spec ){
+tRevNtk * ReversibleBasic( tSpec& Spec, bool UseDC ){
 	tSpec * pSpecCur , * pSpecPrev;
 	pSpecCur = new tSpec;
 	pSpecPrev = new tSpec;
@@ -14,6 +14,9 @@ tRevNtk * ReversibleBasic( tSpec& Spec ){
 	BitNum 	= Spec.front().size();
 	// let LocalSpec become ordered binary number
 	for( int nLine = 0; nLine<LineNum; nLine++ ){
+		if( UseDC )
+			if( Spec.CareLine.find(nLine) == Spec.CareLine.end() )
+				continue;
 		for( int tarBit = 0; tarBit<BitNum; tarBit++ ){
 			if( (nLine & (1<<tarBit)) ^ ! ((*pSpecCur)[nLine][tarBit] == 1 ) )
 				continue;

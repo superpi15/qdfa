@@ -6,10 +6,13 @@
 #include <list>
 #include <fstream>
 #include <string>
+#include <set>
+
 class tRevNtk;
 class tSpec: public  std::vector<std::vector<char> > {
 public:
 	int nBit;
+	std::set<int> CareLine;
 	tSpec():nBit(0){}
 	void print( std::ostream& ostr ){
 		for( int i=0; i<size(); i++ ){
@@ -45,7 +48,7 @@ public:
 	;
 };
 
-tRevNtk * ReversibleBasic( tSpec& Spec );
+tRevNtk * ReversibleBasic( tSpec& Spec, bool UseDC = false );
 int ReadSpec( const char * FileName, tSpec& Spec );
 
 #endif
