@@ -1,5 +1,11 @@
 #include "revsyn.hpp"
 
+tRevNtk * DCBasic( tSpec& Spec ){
+	tSpec T;
+	T.resize( Spec.size() );
+//	for( int i = 0;)
+}
+
 tRevNtk * ReversibleBasic( tSpec& Spec, bool UseDC ){
 	tSpec * pSpecCur , * pSpecPrev;
 	pSpecCur = new tSpec;

@@ -129,6 +129,8 @@ tQdfa * RdfaToRevNtk( tRdfa * pRdfa, bool UseDC=false ){
 	printf("AlphaBet#, Qgate, nSelfTrans, QgateAve, QgateVar\n");
 	return pQdfa;
 }
+
+
 /*
 void tSpec::verify( tRevNtk * pRevNtk ){
 	for( int i=0; i<size(); i++ ){
