@@ -9,6 +9,7 @@
 #include <set>
 
 class tRevNtk;
+
 class tSpec: public  std::vector<std::vector<char> > {
 public:
 	int nBit;
@@ -47,7 +48,7 @@ public:
 	*/
 	;
 };
-
+tRevNtk * DCBasic( tSpec& Spec );
 tRevNtk * ReversibleBasic( tSpec& Spec, bool UseDC = false );
 int ReadSpec( const char * FileName, tSpec& Spec );
 

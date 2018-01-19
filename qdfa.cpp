@@ -67,6 +67,8 @@ tQdfa * RdfaToRevNtk( tRdfa * pRdfa, bool UseDC=false ){
 	int nQgate = 0;
 	int nSelfTrans = 0;
 	std::set<int>::iterator symbol;
+	int nState = pRdfa->nState;
+	bool IsPowerOf2 = nState && !( nState & (nState-1));
 	for( symbol = pRdfa->AlphaBet.begin(); symbol != pRdfa->AlphaBet.end();
 		symbol++ ){
 		std::vector<std::pair<int,int> > Trans;
@@ -82,16 +84,20 @@ tQdfa * RdfaToRevNtk( tRdfa * pRdfa, bool UseDC=false ){
 			EncodedSrc = StateEncode[i];
 			EncodedDes = StateEncode[ pRdfa->adj[i][*symbol] ];
 			Trans[i] = std::pair<int,int>( EncodedSrc, EncodedDes );
-			if( UseDC )
+			if( UseDC ){
 				if( pRdfa->real_path.find(
 					std::pair<int,int>(i,*symbol) )
 					!= pRdfa->real_path.end() )
 					CareLine[EncodedSrc] = 1;
+				//else\
+					printf("not real:(%d,%d)\n",i,*symbol);
+			}
 		}
 		std::sort( Trans.begin(), Trans.end() );
 		tSpec Spec;
-		int width = 1+log(pRdfa->nState)/log(2);
+		int width = (IsPowerOf2?0:1)+log(pRdfa->nState)/log(2);
 		Spec.resize( 1<<width );
+		Spec.nBit = width;
 		for( int i=0; i<Spec.size(); i++ ){
 			Spec[i].resize( width );
 			for( int j=0; j<Spec[i].size(); j++ )
@@ -105,8 +111,14 @@ tQdfa * RdfaToRevNtk( tRdfa * pRdfa, bool UseDC=false ){
 			assert( i==Trans[i].first );
 			for( int j=0; j<width; j++ )
 				Spec[ Trans[i].first ][j]= (Trans[i].second & ( 1<<j))? 1: 0 ;
+			Spec.CareLine.insert( Trans[i].first );
+			//printf("real(%d,%d,%d)\n",Trans[i].first,*symbol,Trans[i].second);
 		}
-		tRevNtk * pRevNtk = ReversibleBasic(Spec);
+		tRevNtk * pRevNtk;
+		if( UseDC )
+			pRevNtk = DCBasic(Spec);
+		else
+			pRevNtk = ReversibleBasic(Spec);
 		printf("Symbol \'%d\'\n", *symbol );
 		pRevNtk->print( std::cout );
 		pQdfa->OpMap[*symbol] = pRevNtk;
@@ -147,7 +159,7 @@ void tSpec::verify( tRevNtk * pRevNtk ){
 */
 
 int main( int argc, char * argv[] ){
-	if( argc!=2 )
+	if( argc<2 )
 		return 0;
 	tDfa Dfa;
 	ReadDfa( argv[1], Dfa );
@@ -159,7 +171,10 @@ int main( int argc, char * argv[] ){
 	pRdfa->print( std::cout );
 	printf("AlphaBet# %d\n", Man.AlphaBet.size() );
 	printf("maxSrcNum %d\n", Man.maxSrcNum );
-	RdfaToRevNtk( pRdfa, 1 );
+	bool UseDC = true;
+	if( argc>=3 )
+		UseDC = false;
+	RdfaToRevNtk( pRdfa, UseDC );
 	//tRevNtk RevNtk;
 	//ReversibleBasic( Spec, RevNtk );
 	//RevNtk.print(std::cout);

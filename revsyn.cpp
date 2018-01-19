@@ -1,9 +1,38 @@
 #include "revsyn.hpp"
 
 tRevNtk * DCBasic( tSpec& Spec ){
-	tSpec T;
+	if( Spec.CareLine.empty() ){
+		printf("%s: No care line specified.\n",__func__);
+		return NULL;
+	}
+	if( Spec.CareLine.size()> Spec.size()/4 ){
+		return ReversibleBasic( Spec, false );
+	}
+	tSpec T, g;
 	T.resize( Spec.size() );
-//	for( int i = 0;)
+	g.resize( Spec.size() );
+	std::set<int>::iterator itr;
+	int LineCounter;
+	for(  itr = Spec.CareLine.begin(), LineCounter = 0;
+		itr != Spec.CareLine.end();
+		itr++, LineCounter++ ){
+		//printf("Spec.nBit=%d\n",Spec.nBit);
+		T[LineCounter].resize( Spec.nBit );
+		for( int j=0; j<Spec.nBit; j++ )
+			T[LineCounter][j] = (*itr)&(1<<j)? 1: 0;
+		T.CareLine.insert(LineCounter);
+		g[LineCounter] = Spec[*itr];
+		g.CareLine.insert(LineCounter);
+	}
+	//T.print(std::cout);
+	//g.print(std::cout);
+	tRevNtk * pRevT, * pRevg;
+	pRevT = ReversibleBasic( T, true );
+	pRevg = ReversibleBasic( g, true );
+	pRevT->reverse();
+	pRevT->insert( pRevT->end(), pRevg->begin(), pRevg->end() );
+	delete pRevg;
+	return pRevT;
 }
 
 tRevNtk * ReversibleBasic( tSpec& Spec, bool UseDC ){
@@ -41,6 +70,10 @@ tRevNtk * ReversibleBasic( tSpec& Spec, bool UseDC ){
 			}
 			// flip
 			for( int jLine = nLine; jLine<LineNum; jLine++ ){
+				if( UseDC )
+					if( pSpecCur->CareLine.find(jLine) 
+						== pSpecCur->CareLine.end() )
+						continue;
 				bool Reject = 0;
 				for( int kBit = 0; kBit<BitNum; kBit++ ){
 					if( kBit == tarBit )
@@ -92,7 +125,7 @@ int ReadSpec( const char * FileName, tSpec& Spec ){
 	in.close();
 	return 1;
 }
-/*
+/**
 int main( int argc, char * argv[] ){
 	if( argc!=2 )
 		return 0;
@@ -101,11 +134,5 @@ int main( int argc, char * argv[] ){
 	tRevNtk * pRevNtk = ReversibleBasic( Spec );
 	pRevNtk->print(std::cout);
 	
-	for( tRevNtk::iterator itr = RevNtk.begin(); itr!=RevNtk.end(); itr++ ){
-		for( int i = 0; i<itr->size(); i++ ){
-			printf("%c",(*itr)[i]);
-		}
-		printf("\n");
-	}
 }
-*/
+/**/
