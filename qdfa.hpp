@@ -118,7 +118,9 @@ public:
 					fitr->second.size(): maxSrcNum;
 			}
 		}
-		AlphaBetBitNum = log(AlphaBet.size())/log(2);
+		bool IsPowerOf2 = AlphaBet.size() 
+			&& !(AlphaBet.size() & (AlphaBet.size()-1));
+		AlphaBetBitNum = (IsPowerOf2?0:1) + log(AlphaBet.size())/log(2);
 		ExtraBitNum = log(maxSrcNum)/log(2);
 		return 1;
 	}
@@ -130,6 +132,9 @@ public:
 		pRdfa->nState = pDfa->nState;
 		pRdfa->AlphaBet = pDfa->AlphaBet;
 		tOpMap OpMap;
+		typedef std::map<int,std::set<int> > tSynoMap;
+		tSynoMap SynoMap;
+		printf("AlphaBetBitNum=%d\n",AlphaBetBitNum);
 		//return pRdfa;
 		for( tSrcLog::iterator itr = SrcLog.begin(); itr != SrcLog.end(); itr++  ){
 			int des = itr->first;
@@ -152,13 +157,22 @@ public:
 					//if( fitr->second.size()<2 )
 					//	continue;
 					if( counter != 0)
-						pRdfa->synonym[input].push_back(ExtInput);
+						SynoMap[input].insert(ExtInput);
+						//pRdfa->synonym[input].push_back(ExtInput);
 					//OpMap[ExtInput]; 
 					pRdfa->real_path.insert(
 						std::pair<int,int>(*srcItr,ExtInput));
 					OpMap[ExtInput].insert( 
 						std::pair<int,int>(*srcItr,des) );
 				}
+			}
+		}
+		for( tSynoMap::iterator itr = SynoMap.begin(); 
+			itr != SynoMap.end(); itr++ ){
+			for( std::set<int>::iterator jitr = itr->second.begin();
+				jitr != itr->second.end();
+				jitr++){
+				pRdfa->synonym[itr->first].push_back(*jitr);
 			}
 		}
 		// add virtual path
@@ -192,6 +206,7 @@ public:
 			if( HasIn[i] != 0 && HasOut[i] == 0 )
 				OnlyIn .insert(i);
 		}
+		//printf("OnlyIn# %d OnlyOut# %d\n",OnlyIn.size(),OnlyOut.size());
 		assert( OnlyIn.size() == OnlyOut.size() );
 		std::set<int>::iterator inItr, outItr;
 		inItr  = OnlyIn .begin();

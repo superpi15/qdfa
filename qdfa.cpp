@@ -118,7 +118,7 @@ tQdfa * RdfaToRevNtk( tRdfa * pRdfa, bool UseDC=false ){
 		if( UseDC )
 			pRevNtk = DCBasic(Spec);
 		else
-			pRevNtk = ReversibleBasic(Spec);
+			pRevNtk = ReversibleBasic(Spec,false);
 		printf("Symbol \'%d\'\n", *symbol );
 		pRevNtk->print( std::cout );
 		pQdfa->OpMap[*symbol] = pRevNtk;
