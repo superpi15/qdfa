@@ -88,6 +88,41 @@ tRevNtk * Top_TtbToRev( Top_Ttb_t * pTtb ){
 	return pRev;
 }
 
+int RevNtkVerify( tRevNtk * pRev, Top_Ttb_t * pTtb ){
+	Top_Ttb_t::iterator itr;
+	bool equi = true;
+	tRevNtk::reverse_iterator gate;
+	mpz_t num;
+	mpz_init(num);
+	for( itr = pTtb->begin(); itr != pTtb->end(); itr ++ ){
+		mpz_set( num, itr->second );
+		gate = pRev->rbegin();
+		for( ; gate != pRev->rend(); gate++ ){
+			int flip = -1;
+			bool cond = true;
+			for( int i=0; i<gate->size(); i++ ){
+				char op = (*gate)[i];
+				if( op == 'X' )
+					flip = i;
+				if( op == '+' )
+					if( mpz_tstbit( num, i ) == 0 ){
+						cond = false;
+						break;
+					}
+			}
+			if( cond && (flip != -1) )
+				mpz_combit(num,flip);
+		}
+		std::cout<< itr->first<<" "<< itr->second<< " "<< num<< std::endl;
+		if( mpz_cmp( itr->first, num ) != 0 ){
+			equi = false;
+			break;
+		}
+	}
+	mpz_clear(num);
+	return equi==true;
+}
+
 int main( int argc, char * argv[] ){
 	if( argc<2 )
 		return 0;
@@ -95,6 +130,10 @@ int main( int argc, char * argv[] ){
 	pTtb->print(std::cout);
 	tRevNtk * pRev = Top_TtbToRev(pTtb);
 	pRev->print(std::cout);
+	if( ! RevNtkVerify( pRev, pTtb ) )
+		printf("The RevNtk doesn't implement Spec.\n");
+	else
+		printf("Spec is correctly implemented.\n");
 	delete pTtb;
 	delete pRev;
 }
