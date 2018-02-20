@@ -2,6 +2,7 @@
 #include "revsyn.hpp"
 #include <algorithm>
 #include <cmath>
+#include "ttb.hpp"
 
 int ReadDfa( const char * FileName, tDfa& Dfa ){
 	std::ifstream in( FileName, std::ios::in );
@@ -157,7 +158,7 @@ void tSpec::verify( tRevNtk * pRevNtk ){
 	}
 }
 */
-
+/*
 int main( int argc, char * argv[] ){
 	if( argc<2 )
 		return 0;
@@ -178,13 +179,6 @@ int main( int argc, char * argv[] ){
 	//tRevNtk RevNtk;
 	//ReversibleBasic( Spec, RevNtk );
 	//RevNtk.print(std::cout);
-	/*
-	for( tRevNtk::iterator itr = RevNtk.begin(); itr!=RevNtk.end(); itr++ ){
-		for( int i = 0; i<itr->size(); i++ ){
-			printf("%c",(*itr)[i]);
-		}
-		printf("\n");
-	}*/
 }
 
-
+*/
