@@ -23,8 +23,8 @@ public:
 class Top_Ttb_t: public vector<Tte> {
 public:
 	int nLine;
-	Top_Ttb_t(){
-		nLine = 0;
+	Top_Ttb_t( int nnLine = 0 ){
+		nLine = nnLine;
 	}
 	~Top_Ttb_t(){
 		for( iterator itr = begin(); itr != end(); itr++ )
@@ -36,6 +36,19 @@ public:
 			ostr<< std::hex << itr->first<<
 			" "<<std::hex<< itr->second<< std::endl;
 		}
+	}
+	void insert_entry( mpz_t input, mpz_t output ){
+		resize( size()+ 1 );
+		mpz_init_set( back().first , input );
+		mpz_init_set( back().second, output );
+	}
+	void insert_entry( unsigned long int input
+					, unsigned long int output ){
+		resize( size()+ 1 );
+		mpz_init( back().first  );
+		mpz_init( back().second );
+		mpz_set_ui( back().first , input );
+		mpz_set_ui( back().second, output );
 	}
 	Top_Ttb_t * Duplicate(){
 		Top_Ttb_t * pRet = new Top_Ttb_t;
