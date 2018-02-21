@@ -224,7 +224,7 @@ public:
 	std::map<int,tRevNtk*> OpMap;
 };
 
-
+int ReadDfa( const char * FileName, tDfa& Dfa );
 
 #endif
 

@@ -43,6 +43,15 @@ Top_Ttb_t * Ttb_ReadSpec( char * FileName ){
 	return pRet;
 }
 
+tRevNtk * Top_TtbToRev_Top( Top_Ttb_t * pTtb ){
+	int nState = pTtb->size();
+	bool IsPowerOf2 = nState && !( nState & (nState-1));
+	if( IsPowerOf2 )
+		return Top_TtbToRev( pTtb );
+	else
+		return Top_TtbToRev_DC( pTtb );
+}
+
 tRevNtk * Top_TtbToRev_DC( Top_Ttb_t * pTtb ){
 	Top_Ttb_t * pIn, * pOut;
 	tRevNtk * pRevIn, * pRevOut;
@@ -64,11 +73,13 @@ tRevNtk * Top_TtbToRev_DC( Top_Ttb_t * pTtb ){
 		pIn ->insert_entry( num, itr->first  );
 		pOut->insert_entry( num, itr->second );
 	}
-	pIn->print(std::cout);
-	pOut->print(std::cout);
+	//pIn->print(std::cout);
+	//pOut->print(std::cout);
 	
 	pRevIn  = Top_TtbToRev( pIn  );
 	pRevOut = Top_TtbToRev( pOut );
+	//pRevIn->print(std::cout);
+	//pRevOut->print(std::cout);
 	pRevIn->reverse();
 	pRevOut->splice( pRevOut->begin(), *pRevIn );
 
@@ -200,16 +211,18 @@ tQdfa * RdfaToRevNtk_Ttb( tRdfa * pRdfa, bool UseDC ){
 				Ttb.insert_entry( EncodedSrc, EncodedDes );
 			}
 		}
-		/*
+		tRevNtk * pRevNtk = Top_TtbToRev_Top( &Ttb );
+		/**
 		if( UseDC )
 			pRevNtk = DCBasic(Spec);
 		else
 			pRevNtk = ReversibleBasic(Spec,false);
+		/**/
 		printf("Symbol \'%d\'\n", *symbol );
 		pRevNtk->print( std::cout );
 		pQdfa->OpMap[*symbol] = pRevNtk;
 		nQgate += pRevNtk->size();	
-		*/
+		/**/
 	}
 	double ave = (double) nQgate/pRdfa->AlphaBet.size();
 	double var = 0;
@@ -230,13 +243,13 @@ tQdfa * RdfaToRevNtk_Ttb( tRdfa * pRdfa, bool UseDC ){
 }
 
 
-
+/**
 int main( int argc, char * argv[] ){
 	if( argc<2 )
 		return 0;
 	Top_Ttb_t * pTtb = Ttb_ReadSpec( argv[1] );
 	pTtb->print(std::cout);
-	tRevNtk * pRev = Top_TtbToRev_DC(pTtb);
+	tRevNtk * pRev = Top_TtbToRev_Top(pTtb);
 	pRev->print(std::cout);
 	if( ! RevNtkVerify( pRev, pTtb ) )
 		printf("The RevNtk doesn't implement Spec.\n");
@@ -245,6 +258,6 @@ int main( int argc, char * argv[] ){
 	delete pTtb;
 	delete pRev;
 }
-
+/**/
 
 
