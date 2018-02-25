@@ -1,2 +1,2 @@
-g++ -g -c *.cpp
-g++ -g *.o -lgmp -lgmpxx
+g++ -g -O3 -c *.cpp
+g++ -g -O3 *.o -lgmp -lgmpxx
