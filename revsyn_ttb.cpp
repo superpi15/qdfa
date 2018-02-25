@@ -3,16 +3,20 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <algorithm> //Bidirection
 
 Top_Ttb_t * Ttb_ReadSpec( char * FileName ){
 	Top_Ttb_t * pRet = new Top_Ttb_t;
 	std::ifstream FileIn( FileName, std::ios::in );
 	std::string line, input, output;
 	
-	int nLine = 0;
+	int nLine = 0, Base = 2;
+	int Temp;
 	std::getline( FileIn, line );
 	std::istringstream header(line);
 	header >> nLine;
+	if( header >> Temp )
+		Base = Temp;
 	pRet->nLine = nLine;
 	while( std::getline( FileIn, line ) ){
 		std::istringstream word(line);
@@ -25,8 +29,8 @@ Top_Ttb_t * Ttb_ReadSpec( char * FileName ){
 			return NULL;
 		}
 		pRet->resize( pRet->size() +1 );
-		mpz_init_set_str( pRet->back().first , input .c_str(), 2 );
-		mpz_init_set_str( pRet->back().second, output.c_str(), 2 );
+		mpz_init_set_str( pRet->back().first , input .c_str(), Base );
+		mpz_init_set_str( pRet->back().second, output.c_str(), Base );
 		//std::cout<< pRet->back().first<<"(" << input<<") " \
 		<< pRet->back().second<<"("<< output<<")"<<std::endl;
 	}
@@ -44,9 +48,7 @@ Top_Ttb_t * Ttb_ReadSpec( char * FileName ){
 }
 
 tRevNtk * Top_TtbToRev_Top( Top_Ttb_t * pTtb ){
-	int nState = pTtb->size();
-	bool IsPowerOf2 = nState && !( nState & (nState-1));
-	if( IsPowerOf2 )
+	if( pTtb->size() == (1<<pTtb->nLine) )
 		return Top_TtbToRev( pTtb );
 	else
 		return Top_TtbToRev_DC( pTtb );
@@ -59,7 +61,6 @@ tRevNtk * Top_TtbToRev_DC( Top_Ttb_t * pTtb ){
 	mpz_t num;
 	std::vector<unsigned long int> MidState( pTtb->size() );
 	unsigned long int count = 0;
-
 	//Basic MidState Assignment
 	for( count = 0; count < pTtb->size(); count++ )
 		MidState[count] = count;
@@ -135,6 +136,100 @@ tRevNtk * Top_TtbToRev( Top_Ttb_t * pTtb ){
 	return pRev;
 }
 
+tRevNtk * Top_TtbToRev_Bi( Top_Ttb_t * pTtb ){
+	if( pTtb->size() != (1<<pTtb->nLine) ){
+		printf("Error: this is a incomplete spec.\n");
+		exit(0);
+	}
+	Top_Ttb_t * pDup = pTtb->Duplicate();
+	tRevNtk * pRev = new tRevNtk;
+	Top_Ttb_t::iterator itr, sub, itr2;
+	tRevNtk & Rev = * pRev;
+	tRevNtk RevInv;
+	mpz_t mask, result;
+
+	mpz_init(mask);
+	mpz_init(result);
+	for( itr = pDup->begin(); itr != pDup->end(); itr ++ ){
+		if( mpz_cmp( itr->first, itr->second ) == 0 )
+			continue;
+		;
+		itr2 = pDup->find_second( itr, pDup->end(), itr->first );
+		
+		mp_bitcnt_t hamdist[2];
+		hamdist[0] = mpz_hamdist( itr ->first, itr ->second );
+		hamdist[1] = mpz_hamdist( itr2->first, itr2->second );
+		if( hamdist[0]<=hamdist[1] ){
+			//std::cout<<">>1\n";\
+			pDup->print(std::cout);
+			for( int i=0; i<pDup->nLine; i++ ){
+				if( mpz_tstbit( itr->first, i ) 
+					== mpz_tstbit(itr->second, i ) )
+					continue;
+				mpz_combit( itr->second, i );
+				mpz_set( mask, itr->second );
+				mpz_clrbit( mask, i );
+				//use mask to encode a gate
+				Rev.push_front( tRevNtk::value_type() );
+				Rev.front().resize( pDup->nLine, '-' );
+				Rev.front()[i] = 'X';
+				for( int j=0; j<pDup->nLine; j++ ){
+					if( j==i )
+						continue;
+					if( mpz_tstbit( mask, j ) )
+						Rev.front()[j] = '+';
+				}
+				//flip bit
+				for( sub = itr + 1; sub != pDup->end(); sub++ ){
+					mpz_and( result, mask, sub->second );
+					if( mpz_cmp( result, mask ) == 0 )
+						mpz_combit( sub->second, i );
+				}
+			}
+
+			//pDup->print(std::cout);\
+			std::cout<<"<<1\n";
+		} else {
+			std::sort( itr, pDup->end(), Tte::cmptor_second() );
+			//std::cout<<">>2\n";\
+			pDup->print(std::cout);
+			for( int i=0; i<pDup->nLine; i++ ){
+				if( mpz_tstbit( itr->first, i ) 
+					== mpz_tstbit(itr->second, i ) )
+					continue;
+				mpz_combit( itr->first, i );
+				mpz_set( mask, itr->first );
+				mpz_clrbit( mask, i );
+				//use mask to encode a gate
+				RevInv.push_back( tRevNtk::value_type() );
+				RevInv.back().resize( pDup->nLine, '-' );
+				RevInv.back()[i] = 'X';
+				for( int j=0; j<pDup->nLine; j++ ){
+					if( j==i )
+						continue;
+					if( mpz_tstbit( mask, j ) )
+						RevInv.back()[j] = '+';
+				}
+				//flip bit
+				for( sub = itr + 1; sub != pDup->end(); sub++ ){
+					mpz_and( result, mask, sub->first );
+					if( mpz_cmp( result, mask ) == 0 )
+						mpz_combit( sub->first, i );
+				}
+			}
+			std::sort( itr, pDup->end(), Tte::cmptor_first() );
+			//pDup->print(std::cout);\
+			std::cout<<"<<2\n";
+		}
+	}
+	mpz_clear(mask);
+	mpz_clear(result);
+	pRev->splice( pRev->begin(), RevInv );
+
+	delete pDup;
+	return pRev;
+}
+
 int RevNtkVerify( tRevNtk * pRev, Top_Ttb_t * pTtb ){
 	Top_Ttb_t::iterator itr;
 	bool equi = true;
@@ -163,6 +258,9 @@ int RevNtkVerify( tRevNtk * pRev, Top_Ttb_t * pTtb ){
 		//std::cout<< itr->first<<" "<< itr->second\
 			<< " "<< num<< std::endl;
 		if( mpz_cmp( itr->first, num ) != 0 ){
+			std::cout<<"Nequi:"<< std::hex << itr->first<<" "<< itr->second\
+			<< " "<< num<< std::endl;
+
 			equi = false;
 			break;
 		}
@@ -243,21 +341,5 @@ tQdfa * RdfaToRevNtk_Ttb( tRdfa * pRdfa, bool UseDC ){
 }
 
 
-/**
-int main( int argc, char * argv[] ){
-	if( argc<2 )
-		return 0;
-	Top_Ttb_t * pTtb = Ttb_ReadSpec( argv[1] );
-	pTtb->print(std::cout);
-	tRevNtk * pRev = Top_TtbToRev_Top(pTtb);
-	pRev->print(std::cout);
-	if( ! RevNtkVerify( pRev, pTtb ) )
-		printf("The RevNtk doesn't implement Spec.\n");
-	else
-		printf("Spec is correctly implemented.\n");
-	delete pTtb;
-	delete pRev;
-}
-/**/
 
 

@@ -17,6 +17,16 @@ public:
 		mpz_clear(this->first);
 		mpz_clear(this->second);
 	}
+	struct cmptor_first{
+		bool operator()( const Tte& e1, const Tte& e2 )const{
+			return mpz_cmp( e1.first, e2.first ) < 0;
+		}
+	};
+	struct cmptor_second{
+		bool operator()( const Tte& e1, const Tte& e2 )const{
+			return mpz_cmp( e1.second, e2.second ) < 0;
+		}
+	};
 };
 
 // Ttb: Truth Table
@@ -65,7 +75,15 @@ public:
 		}
 		return pRet;
 	}
-	
+	iterator find_second( iterator first, iterator last, mpz_t num ){
+		for( iterator itr = first; itr != last; itr++ ){
+			if( mpz_cmp( itr->second, num ) == 0 )
+				return itr;
+		}
+		return last;
+	}
 };
 
+
 #endif
+
