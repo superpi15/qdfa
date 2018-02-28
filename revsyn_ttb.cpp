@@ -92,6 +92,14 @@ tRevNtk * Top_TtbToRev_DC( Top_Ttb_t * pTtb ){
 	return pRevOut;
 }
 
+bool Determine_Pseudo_Care_Output(
+	std::vector<Top_Mpz_t>::iterator first,
+	std::vector<Top_Mpz_t>::iterator last, 
+	mpz_t& pcin, mpz_t& pcout, mpz_t& pcmax ){
+	//This function writes the result to pcout
+	mpz_set( pcout, pcin ); //init
+}
+
 tRevNtk * Top_TtbToRev_PseudoCare( Top_Ttb_t * pTtb ){
 	Top_Ttb_t * pDup = pTtb->Duplicate();
 	Top_Ttb_t::iterator itr, sub;
@@ -112,21 +120,35 @@ tRevNtk * Top_TtbToRev_PseudoCare( Top_Ttb_t * pTtb ){
 	}
 	std::sort( OG.begin(), OG.end(), Top_Mpz_t::cmptor() );
 
-	unsigned long GTop = 0;
-	for( itr = pDup->begin(); itr != pDup->end(); itr ++, GTop++ ){
+	unsigned long Gmin = 0;
+	for( itr = pDup->begin(); itr != pDup->end(); itr ++, Gmin++ ){
 		if( mpz_cmp( itr->first, itr->second ) == 0 )
 			continue;
-		if( Top_Mpz_t::cmptor()( OG[GTop], IG[GTop] ) ){
+		if( Top_Mpz_t::cmptor()( OG[Gmin], IG[Gmin] ) ){
 			//min(OG) < min(IG), insert pseudo_care
 			//determine the output of pseudo_care
 			//compute Q-gates
 			//perform transformation
 			//sort
 			//repeat until min(OG) >= min(IG)
+			mpz_t pcin, pcout; // pseudo care in/out
+			mpz_t pcmax; // range of pcout: [pcmin:pcmax)
+			mpz_init( pcin );
+			mpz_init( pcout );
+			mpz_init( pcmax );
+			
+			mpz_set_ui( pcmax, 0 );
+			mpz_setbit( pcmax, pDup->nLine );
 			do {
-				;
+				mpz_set( pcin, *OG[Gmin].obj ); // pseudo care term
+				Determine_Pseudo_Care_Output( 
+					OG.begin()+Gmin, OG.end(), pcin, pcout, pcmax );
 				std::sort( OG.begin(), OG.end(), Top_Mpz_t::cmptor() );
-			} while( Top_Mpz_t::cmptor()( OG[GTop], IG[GTop] ) );
+			} while( Top_Mpz_t::cmptor()( OG[Gmin], IG[Gmin] ) );
+			mpz_clear( pcin );
+			mpz_clear( pcout );
+			mpz_clear( pcmax );
+
 			//check again
 			if( mpz_cmp( itr->first, itr->second ) == 0 )
 				continue;
