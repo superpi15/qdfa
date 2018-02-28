@@ -91,6 +91,80 @@ tRevNtk * Top_TtbToRev_DC( Top_Ttb_t * pTtb ){
 
 	return pRevOut;
 }
+
+tRevNtk * Top_TtbToRev_PseudoCare( Top_Ttb_t * pTtb ){
+	Top_Ttb_t * pDup = pTtb->Duplicate();
+	Top_Ttb_t::iterator itr, sub;
+	std::vector<Top_Mpz_t> IG, OG;
+	tRevNtk * pRev = new tRevNtk;
+	tRevNtk & Rev = * pRev;
+	mpz_t mask, result;
+
+	mpz_init(mask);
+	mpz_init(result);
+	IG.resize( pDup->size() );
+	OG.resize( pDup->size() );
+
+	for( itr = pDup->begin(); itr != pDup->end(); itr ++ ){
+		int index = itr - pDup->begin();
+		IG[index].obj = &itr->first;
+		OG[index].obj = &itr->second;
+	}
+	std::sort( OG.begin(), OG.end(), Top_Mpz_t::cmptor() );
+
+	unsigned long GTop = 0;
+	for( itr = pDup->begin(); itr != pDup->end(); itr ++, GTop++ ){
+		if( mpz_cmp( itr->first, itr->second ) == 0 )
+			continue;
+		if( Top_Mpz_t::cmptor()( OG[GTop], IG[GTop] ) ){
+			//min(OG) < min(IG), insert pseudo_care
+			//determine the output of pseudo_care
+			//compute Q-gates
+			//perform transformation
+			//sort
+			//repeat until min(OG) >= min(IG)
+			do {
+				;
+				std::sort( OG.begin(), OG.end(), Top_Mpz_t::cmptor() );
+			} while( Top_Mpz_t::cmptor()( OG[GTop], IG[GTop] ) );
+			//check again
+			if( mpz_cmp( itr->first, itr->second ) == 0 )
+				continue;
+		}
+
+		for( int i=0; i<pDup->nLine; i++ ){
+			if( mpz_tstbit( itr->first, i ) 
+				== mpz_tstbit(itr->second, i ) )
+				continue;
+			mpz_combit( itr->second, i );
+			mpz_set( mask, itr->second );
+			mpz_clrbit( mask, i );
+			//use mask to encode a gate
+			Rev.push_front( tRevNtk::value_type() );
+			Rev.front().resize( pDup->nLine, '-' );
+			Rev.front()[i] = 'X';
+			for( int j=0; j<pDup->nLine; j++ ){
+				if( j==i )
+					continue;
+				if( mpz_tstbit( mask, j ) )
+					Rev.front()[j] = '+';
+			}
+			//flip bit
+			for( sub = itr + 1; sub != pDup->end(); sub++ ){
+				mpz_and( result, mask, sub->second );
+				if( mpz_cmp( result, mask ) == 0 )
+					mpz_combit( sub->second, i );
+			}
+		}
+	}
+	mpz_clear(mask);
+	mpz_clear(result);
+	delete pDup;
+
+	return pRev;
+
+}
+
 tRevNtk * Top_TtbToRev( Top_Ttb_t * pTtb ){
 	Top_Ttb_t * pDup = pTtb->Duplicate();
 	Top_Ttb_t::iterator itr, sub;

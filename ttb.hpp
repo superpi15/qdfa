@@ -9,6 +9,17 @@
 
 using std::vector;
 
+class Top_Mpz_t {
+public:
+	mpz_t * obj;
+	struct cmptor{
+		bool operator()( const Top_Mpz_t& n1, const Top_Mpz_t& n2 )
+		const{
+			return mpz_cmp( *n1.obj, *n2.obj ) < 0;
+		}
+	};
+};
+
 // Tte: Truth Table Entry
 class Tte: public std::pair<mpz_t,mpz_t> {
 public:

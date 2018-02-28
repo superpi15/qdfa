@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "revsyn_ttb.hpp"
-
+#include <time.h>
 // Reversible DFA 
 /**
 int main( int argc, char * argv[] ){
@@ -50,6 +50,8 @@ int main( int argc, char * argv[] ){
 // DC-aware, Bi-direction, normal
 /**/
 int main( int argc, char * argv[] ){
+	clock_t clk_start, clk_end;
+	clk_start = clock();
 	int mode = 0;
 	if( argc<2 )
 		return 0;
@@ -66,11 +68,15 @@ int main( int argc, char * argv[] ){
 	else
 		pRev = Top_TtbToRev(pTtb);
 	//pRev->print(std::cout);
-	std::cout<<"Toffoli# "<<std::dec<< pRev->size() <<std::endl;
+	//std::cout<<"Toffoli# "<<std::dec<< pRev->size() <<std::endl;
 	//if( ! RevNtkVerify( pRev, pTtb ) )\
 		printf("The RevNtk doesn't implement Spec.\n");\
 	else\
 		printf("Spec is correctly implemented.\n");
+	clk_end = clock();
+	printf("(Toffli#,Time): %15d %8.3f\n"
+		, pRev->size()
+		, (double) (clk_end- clk_start)/CLOCKS_PER_SEC );
 	delete pTtb;
 	delete pRev;
 }
