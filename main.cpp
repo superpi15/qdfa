@@ -65,11 +65,13 @@ int main( int argc, char * argv[] ){
 		pRev = Top_TtbToRev_Top(pTtb);
 	else if( mode == 1 )
 		pRev = Top_TtbToRev_Bi(pTtb);
+	else if( mode == 2 )
+		pRev = Top_TtbToRev_PseudoCare(pTtb);
 	else
 		pRev = Top_TtbToRev(pTtb);
 	//pRev->print(std::cout);
 	//std::cout<<"Toffoli# "<<std::dec<< pRev->size() <<std::endl;
-	//if( ! RevNtkVerify( pRev, pTtb ) )\
+	if( ! RevNtkVerify( pRev, pTtb ) )\
 		printf("The RevNtk doesn't implement Spec.\n");\
 	else\
 		printf("Spec is correctly implemented.\n");

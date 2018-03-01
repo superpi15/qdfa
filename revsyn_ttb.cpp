@@ -95,9 +95,51 @@ tRevNtk * Top_TtbToRev_DC( Top_Ttb_t * pTtb ){
 bool Determine_Pseudo_Care_Output(
 	std::vector<Top_Mpz_t>::iterator first,
 	std::vector<Top_Mpz_t>::iterator last, 
-	mpz_t& pcin, mpz_t& pcout, mpz_t& pcmax ){
+	mpz_t& pcout, mpz_t& pcin, 
+	mpz_t& pcmin, mpz_t& pcmax, int bitcnt ){
 	//This function writes the result to pcout
-	mpz_set( pcout, pcin ); //init
+	Top_Mpz_t hold;
+	hold.obj = &pcout;
+
+	//lazy update
+	if( mpz_cmp( pcout, pcin )<0 )
+		mpz_set( pcout, pcin );
+	if( !std::binary_search( first, last, hold, Top_Mpz_t::cmptor() ) )
+		return true;
+	
+	for( int i=bitcnt-1; i>=0; i-- ){
+		if( mpz_tstbit( pcout, i )==0 )
+			mpz_setbit( pcout, i );
+		if( mpz_cmp( pcout, pcmin )>0 
+		&& !std::binary_search( first, last, hold,
+		Top_Mpz_t::cmptor() ) )
+			break;
+	}
+	mpz_t res;
+	mpz_init( res );
+	mpz_set( res, pcout );
+	while( std::binary_search( first, last, hold,
+	Top_Mpz_t::cmptor() ) ){
+		//mpz_out_str( stdout, 2, pcout );\
+		printf("--\n");
+		mpz_sub_ui( res, pcout, 1 );
+		mpz_set( pcout, res );
+		assert( mpz_cmp( pcout, pcin )>0 );
+	}
+	//while( first != last ){\
+		mpz_out_str( stdout, 2, *first->obj ); fflush( stdout );\
+		printf(" ... %d\n", last- first ); fflush( stdout );\
+		first ++;\
+	}
+	mpz_clear( res );
+	//mpz_out_str( stdout, 2, pcout ); fflush( stdout );\
+	printf("\n"); fflush( stdout );\
+	mpz_out_str( stdout, 2, pcmin ); fflush( stdout );\
+	printf("\n"); fflush( stdout );
+	assert( mpz_cmp( pcout, pcin )>0 );
+	assert( mpz_cmp( pcout, pcmax )<0 );
+	//pcin< pcout < pcmax
+	return true;
 }
 
 tRevNtk * Top_TtbToRev_PseudoCare( Top_Ttb_t * pTtb ){
@@ -119,12 +161,22 @@ tRevNtk * Top_TtbToRev_PseudoCare( Top_Ttb_t * pTtb ){
 		OG[index].obj = &itr->second;
 	}
 	std::sort( OG.begin(), OG.end(), Top_Mpz_t::cmptor() );
-
+	//for( itr = pDup->begin(); itr != pDup->end(); itr ++ ){\
+		int index = itr - pDup->begin();\
+		mpz_out_str( stdout, 2, *OG[index].obj );\
+		printf(" ");\
+		mpz_out_str( stdout, 2, *IG[index].obj );\
+		printf("\n");\
+	}
 	unsigned long Gmin = 0;
 	for( itr = pDup->begin(); itr != pDup->end(); itr ++, Gmin++ ){
-		if( mpz_cmp( itr->first, itr->second ) == 0 )
-			continue;
+
 		if( Top_Mpz_t::cmptor()( OG[Gmin], IG[Gmin] ) ){
+		//printf(" Gmin=%d ", Gmin);\
+		mpz_out_str( stdout, 2, *OG[Gmin].obj );\
+		printf(" vs ");\
+		mpz_out_str( stdout, 2, *IG[Gmin].obj );\
+		printf("\n");
 			//min(OG) < min(IG), insert pseudo_care
 			//determine the output of pseudo_care
 			//compute Q-gates
@@ -138,11 +190,44 @@ tRevNtk * Top_TtbToRev_PseudoCare( Top_Ttb_t * pTtb ){
 			mpz_init( pcmax );
 			
 			mpz_set_ui( pcmax, 0 );
+			mpz_set_ui( pcout, 0 );
 			mpz_setbit( pcmax, pDup->nLine );
 			do {
 				mpz_set( pcin, *OG[Gmin].obj ); // pseudo care term
 				Determine_Pseudo_Care_Output( 
-					OG.begin()+Gmin, OG.end(), pcin, pcout, pcmax );
+					OG.begin()+Gmin, OG.end(), 
+					pcout, pcin, itr->first, pcmax, pDup->nLine );
+				// Start of compute Q-gate and perform Transform
+				for( int i=0; i<pDup->nLine; i++ ){
+					if( mpz_tstbit( pcout, i ) 
+						== mpz_tstbit( pcin, i ) )
+						continue;
+					mpz_combit( pcout, i );
+					mpz_set( mask, pcout );
+					mpz_clrbit( mask, i );
+					//use mask to encode a gate
+					Rev.push_front( tRevNtk::value_type() );
+					Rev.front().resize( pDup->nLine, '-' );
+					Rev.front()[i] = 'X';
+					for( int j=0; j<pDup->nLine; j++ ){
+						if( j==i )
+							continue;
+						if( mpz_tstbit( mask, j ) )
+							Rev.front()[j] = '+';
+					}
+					//flip bit
+					//Note: (sub=itr) is correct in this function!!
+					//Normal version is (sub=itr+1)
+					for( sub = itr; sub != pDup->end(); sub++ ){
+						mpz_and( result, mask, sub->second );
+						if( mpz_cmp( result, mask ) == 0 )
+							mpz_combit( sub->second, i );
+					}
+				}
+				//Start of compute Q-gate and perform Transform
+				//printf("Perform Transform ...\n");\
+				pDup->print(std::cout);\
+				printf("Done\n");
 				std::sort( OG.begin(), OG.end(), Top_Mpz_t::cmptor() );
 			} while( Top_Mpz_t::cmptor()( OG[Gmin], IG[Gmin] ) );
 			mpz_clear( pcin );
@@ -152,7 +237,16 @@ tRevNtk * Top_TtbToRev_PseudoCare( Top_Ttb_t * pTtb ){
 			//check again
 			if( mpz_cmp( itr->first, itr->second ) == 0 )
 				continue;
+		} else {
+			//printf(" Gmin=%d ", Gmin);\
+			mpz_out_str( stdout, 2, *OG[Gmin].obj );\
+			printf(" vs ");\
+			mpz_out_str( stdout, 2, *IG[Gmin].obj );\
+			printf("... else \n");
 		}
+
+		if( mpz_cmp( itr->first, itr->second ) == 0 )
+			continue;
 
 		for( int i=0; i<pDup->nLine; i++ ){
 			if( mpz_tstbit( itr->first, i ) 
@@ -178,6 +272,8 @@ tRevNtk * Top_TtbToRev_PseudoCare( Top_Ttb_t * pTtb ){
 					mpz_combit( sub->second, i );
 			}
 		}
+		//sort after the last Transform
+		std::sort( OG.begin(), OG.end(), Top_Mpz_t::cmptor() );
 	}
 	mpz_clear(mask);
 	mpz_clear(result);
