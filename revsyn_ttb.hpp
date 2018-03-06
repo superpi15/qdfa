@@ -13,6 +13,7 @@ tQdfa * RdfaToRevNtk_Ttb( tRdfa * pRdfa, bool UseDC );
 int RevNtkVerify( tRevNtk * pRev, Top_Ttb_t * pTtb );
 tRevNtk * Top_TtbToRev_Bi( Top_Ttb_t * pTtb ); 
 tRevNtk * Top_TtbToRev_PseudoCare( Top_Ttb_t * pTtb );
+tRevNtk * Top_TtbToRev_Bi_Core( Top_Ttb_t * pTtb );
 tRevNtk * TtbToRevNtk();
 
 #endif

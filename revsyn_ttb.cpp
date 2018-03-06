@@ -92,6 +92,124 @@ tRevNtk * Top_TtbToRev_DC( Top_Ttb_t * pTtb ){
 	return pRevOut;
 }
 
+tRevNtk * Top_TtbToRev_Bi_Core( Top_Ttb_t * pTtb ){
+//	if( pTtb->size() != (1<<pTtb->nLine) ){
+//		printf("Error: this is a incomplete spec.\n");
+//		exit(0);
+//	}
+	Top_Ttb_t * pDup = pTtb->Duplicate();
+	std::vector<Top_Mpz_t> OG;
+
+	tRevNtk * pRev = new tRevNtk;
+	Top_Ttb_t::iterator itr, sub, itr2;
+	tRevNtk & Rev = * pRev;
+	tRevNtk RevInv;
+	mpz_t mask, result;
+	
+	OG.resize( pDup->size() );
+	for( itr = pDup->begin(); itr != pDup->end(); itr++ ){
+		int index = itr - pDup->begin();
+		OG[index].obj = &itr->second;
+	}
+	std::sort( OG.begin(), OG.end(), Top_Mpz_t::cmptor() );
+
+	mpz_init(mask);
+	mpz_init(result);
+	unsigned long Gmin = 0;
+	for( itr = pDup->begin(); itr != pDup->end(); itr ++, Gmin ++ ){
+//		if( mpz_cmp( itr->first, itr->second ) == 0 )
+//			continue;
+//		;
+
+		int res = mpz_cmp( itr->first, *OG[Gmin].obj );
+		bool IsForward = true;
+		if( res == 0 ){
+			itr2 = pDup->find_second( 
+				itr, pDup->end(), *OG[Gmin].obj );
+			mp_bitcnt_t hamdist[2];
+			hamdist[0] = mpz_hamdist( itr ->first, itr ->second );
+			hamdist[1] = mpz_hamdist( itr2->first, itr2->second );
+			IsForward = hamdist[0]<=hamdist[1]? true: false;
+		} else {
+			IsForward = res < 0? true: false;
+		}
+		//std::cout<< res <<std::endl;
+
+		if( IsForward ){
+			//std::cout<<">>1\n";\
+			pDup->print(std::cout);
+			for( int i=0; i<pDup->nLine; i++ ){
+				if( mpz_tstbit( itr->first, i ) 
+					== mpz_tstbit(itr->second, i ) )
+					continue;
+				mpz_combit( itr->second, i );
+				mpz_set( mask, itr->second );
+				mpz_clrbit( mask, i );
+				//use mask to encode a gate
+				Rev.push_front( tRevNtk::value_type() );
+				Rev.front().resize( pDup->nLine, '-' );
+				Rev.front()[i] = 'X';
+				for( int j=0; j<pDup->nLine; j++ ){
+					if( j==i )
+						continue;
+					if( mpz_tstbit( mask, j ) )
+						Rev.front()[j] = '+';
+				}
+				//flip bit
+				for( sub = itr + 1; sub != pDup->end(); sub++ ){
+					mpz_and( result, mask, sub->second );
+					if( mpz_cmp( result, mask ) == 0 )
+						mpz_combit( sub->second, i );
+				}
+			}
+
+			//pDup->print(std::cout);\
+			std::cout<<"<<1\n";
+		} else {
+			std::sort( itr, pDup->end(), Tte::cmptor_second() );
+			//std::cout<<">>2\n";\
+			pDup->print(std::cout);
+			for( int i=0; i<pDup->nLine; i++ ){
+				if( mpz_tstbit( itr->first, i ) 
+					== mpz_tstbit(itr->second, i ) )
+					continue;
+				mpz_combit( itr->first, i );
+				mpz_set( mask, itr->first );
+				mpz_clrbit( mask, i );
+				//use mask to encode a gate
+				RevInv.push_back( tRevNtk::value_type() );
+				RevInv.back().resize( pDup->nLine, '-' );
+				RevInv.back()[i] = 'X';
+				for( int j=0; j<pDup->nLine; j++ ){
+					if( j==i )
+						continue;
+					if( mpz_tstbit( mask, j ) )
+						RevInv.back()[j] = '+';
+				}
+				//flip bit
+				for( sub = itr + 1; sub != pDup->end(); sub++ ){
+					mpz_and( result, mask, sub->first );
+					if( mpz_cmp( result, mask ) == 0 )
+						mpz_combit( sub->first, i );
+				}
+			}
+			std::sort( itr, pDup->end(), Tte::cmptor_first() );
+			//std::cout<<">>\n";\
+			pDup->print(std::cout);\
+			std::cout<<"<<2\n";
+		}
+		std::sort( OG.begin()+ Gmin, OG.end(), Top_Mpz_t::cmptor() );
+
+	}
+	mpz_clear(mask);
+	mpz_clear(result);
+	pRev->splice( pRev->begin(), RevInv );
+
+	delete pDup;
+	return pRev;
+}
+
+
 bool Determine_Pseudo_Care_Output(
 	std::vector<Top_Mpz_t>::iterator first,
 	std::vector<Top_Mpz_t>::iterator last, 
