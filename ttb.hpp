@@ -54,8 +54,14 @@ public:
 	void memory_clear(){}
 	void print( std::ostream& ostr ){
 		for( iterator itr = begin(); itr != end(); itr++ ){
-			ostr<< std::hex << itr->first<<
+			//ostr<< std::hex << itr->first<<\
 			" "<<std::hex<< itr->second<< std::endl;
+			for( int i=nLine-1; i>=0; i-- )
+				ostr<< ( mpz_tstbit( itr->first, i )? "1": "0" );
+			ostr<<" ";
+			for( int i=nLine-1; i>=0; i-- )
+				ostr<< ( mpz_tstbit( itr->second, i )? "1": "0" );
+			ostr<< std::endl;
 		}
 	}
 	void insert_entry( mpz_t input, mpz_t output ){

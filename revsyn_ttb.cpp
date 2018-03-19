@@ -48,10 +48,14 @@ Top_Ttb_t * Ttb_ReadSpec( char * FileName ){
 }
 
 tRevNtk * Top_TtbToRev_Top( Top_Ttb_t * pTtb ){
+	/**
 	if( pTtb->size() == (1<<pTtb->nLine) )
 		return Top_TtbToRev( pTtb );
 	else
 		return Top_TtbToRev_DC( pTtb );
+	/**/
+	return Top_TtbToRev_DC( pTtb );
+
 }
 
 tRevNtk * Top_TtbToRev_DC( Top_Ttb_t * pTtb ){
@@ -64,7 +68,7 @@ tRevNtk * Top_TtbToRev_DC( Top_Ttb_t * pTtb ){
 	//Basic MidState Assignment
 	for( count = 0; count < pTtb->size(); count++ )
 		MidState[count] = count;
-
+	printf("HAHA\n");
 	mpz_init(num);
 	pIn = new Top_Ttb_t( pTtb->nLine );
 	pOut= new Top_Ttb_t( pTtb->nLine );
@@ -76,19 +80,22 @@ tRevNtk * Top_TtbToRev_DC( Top_Ttb_t * pTtb ){
 	}
 	//pIn->print(std::cout);
 	//pOut->print(std::cout);
-	
 	pRevIn  = Top_TtbToRev( pIn  );
 	pRevOut = Top_TtbToRev( pOut );
-	//pRevIn->print(std::cout);
-	//pRevOut->print(std::cout);
+	//printf("In half\n");\
+	pRevIn->print(std::cout);\
+	printf("Out half\n");\
+	pRevOut->print(std::cout);
 	pRevIn->reverse();
+std::cout<< pRevIn->size() <<":"<< pRevOut->size()<<std::endl;	
 	pRevOut->splice( pRevOut->begin(), *pRevIn );
 
 	mpz_clear(num);
 	delete pIn;
 	delete pOut;
 	delete pRevIn;
-
+	//printf("Total\n");\
+	pRevOut->print(std::cout);
 	return pRevOut;
 }
 
@@ -138,6 +145,14 @@ tRevNtk * Top_TtbToRev_Bi_Core( Top_Ttb_t * pTtb ){
 		if( IsForward ){
 			//std::cout<<">>1\n";\
 			pDup->print(std::cout);
+
+			int SetVal, Direction;
+			SetVal = 1;
+			Direction= 1;
+			Top_Synthesis( Rev, pDup, SetVal, Direction, itr );
+			SetVal= 0;
+			Top_Synthesis( Rev, pDup, SetVal, Direction, itr );
+			/**
 			for( int i=0; i<pDup->nLine; i++ ){
 				if( mpz_tstbit( itr->first, i ) 
 					== mpz_tstbit(itr->second, i ) )
@@ -162,13 +177,21 @@ tRevNtk * Top_TtbToRev_Bi_Core( Top_Ttb_t * pTtb ){
 						mpz_combit( sub->second, i );
 				}
 			}
-
+			/**/
 			//pDup->print(std::cout);\
 			std::cout<<"<<1\n";
 		} else {
 			std::sort( itr, pDup->end(), Tte::cmptor_second() );
 			//std::cout<<">>2\n";\
 			pDup->print(std::cout);
+
+			int SetVal, Direction;
+			SetVal = 1;
+			Direction= 0;
+			Top_Synthesis( RevInv, pDup, SetVal, Direction, itr );
+			SetVal= 0;
+			Top_Synthesis( RevInv, pDup, SetVal, Direction, itr );
+			/**
 			for( int i=0; i<pDup->nLine; i++ ){
 				if( mpz_tstbit( itr->first, i ) 
 					== mpz_tstbit(itr->second, i ) )
@@ -193,6 +216,7 @@ tRevNtk * Top_TtbToRev_Bi_Core( Top_Ttb_t * pTtb ){
 						mpz_combit( sub->first, i );
 				}
 			}
+			/**/
 			std::sort( itr, pDup->end(), Tte::cmptor_first() );
 			//std::cout<<">>\n";\
 			pDup->print(std::cout);\
@@ -204,7 +228,7 @@ tRevNtk * Top_TtbToRev_Bi_Core( Top_Ttb_t * pTtb ){
 	mpz_clear(mask);
 	mpz_clear(result);
 	pRev->splice( pRev->begin(), RevInv );
-
+	//pRev->print( std::cout );
 	delete pDup;
 	return pRev;
 }
@@ -316,9 +340,21 @@ tRevNtk * Top_TtbToRev_PseudoCare( Top_Ttb_t * pTtb ){
 					OG.begin()+Gmin, OG.end(), 
 					pcout, pcin, itr->first, pcmax, pDup->nLine );
 				// Start of compute Q-gate and perform Transform
+				/**
+				int SetVal, Direction;
+				SetVal = 1;
+				Direction = 1;
+				Top_Synthesis_PseudoCare( Rev, pDup, SetVal
+				, Direction, itr, pcin, pcout );
+				SetVal = 0;
+				Top_Synthesis_PseudoCare( Rev, pDup, SetVal
+				, Direction, itr, pcin, pcout );
+				/**/
 				for( int i=0; i<pDup->nLine; i++ ){
 					if( mpz_tstbit( pcout, i ) 
 						== mpz_tstbit( pcin, i ) )
+						continue;
+					if( mpz_tstbit(pcout, 1 )==1 )
 						continue;
 					mpz_combit( pcout, i );
 					mpz_set( mask, pcout );
@@ -342,6 +378,34 @@ tRevNtk * Top_TtbToRev_PseudoCare( Top_Ttb_t * pTtb ){
 							mpz_combit( sub->second, i );
 					}
 				}
+				for( int i=0; i<pDup->nLine; i++ ){
+					if( mpz_tstbit( pcout, i ) 
+						== mpz_tstbit( pcin, i ) )
+						continue;
+					if( mpz_tstbit(pcout, 1 )==0 )
+						continue;
+					mpz_combit( pcout, i );
+					mpz_set( mask, pcout );
+					mpz_clrbit( mask, i );
+					//use mask to encode a gate
+					Rev.push_front( tRevNtk::value_type() );
+					Rev.front().resize( pDup->nLine, '-' );
+					Rev.front()[i] = 'X';
+					for( int j=0; j<pDup->nLine; j++ ){
+						if( j==i )
+							continue;
+						if( mpz_tstbit( mask, j ) )
+							Rev.front()[j] = '+';
+					}
+					//flip bit
+					//Note: (sub=itr) is correct in this function!!
+					//Normal version is (sub=itr+1)
+					for( sub = itr; sub != pDup->end(); sub++ ){
+						mpz_and( result, mask, sub->second );
+						if( mpz_cmp( result, mask ) == 0 )
+							mpz_combit( sub->second, i );
+					}
+				}/**/
 				//Start of compute Q-gate and perform Transform
 				//printf("Perform Transform ...\n");\
 				pDup->print(std::cout);\
@@ -365,7 +429,14 @@ tRevNtk * Top_TtbToRev_PseudoCare( Top_Ttb_t * pTtb ){
 
 		if( mpz_cmp( itr->first, itr->second ) == 0 )
 			continue;
-
+		/**/
+		int SetVal, Direction;
+		SetVal = 1;
+		Direction= 1;
+		Top_Synthesis( Rev, pDup, SetVal, Direction, itr );
+		SetVal= 0;
+		Top_Synthesis( Rev, pDup, SetVal, Direction, itr );
+		/**
 		for( int i=0; i<pDup->nLine; i++ ){
 			if( mpz_tstbit( itr->first, i ) 
 				== mpz_tstbit(itr->second, i ) )
@@ -390,15 +461,113 @@ tRevNtk * Top_TtbToRev_PseudoCare( Top_Ttb_t * pTtb ){
 					mpz_combit( sub->second, i );
 			}
 		}
+		/**/
 		//sort after the last Transform
 		std::sort( OG.begin(), OG.end(), Top_Mpz_t::cmptor() );
 	}
 	mpz_clear(mask);
 	mpz_clear(result);
+	//pRev->print(std::cout);
 	delete pDup;
 
 	return pRev;
 
+}
+int Top_Synthesis_PseudoCare( tRevNtk& Rev, Top_Ttb_t * pTtb
+, int SetVal, int Direction, Top_Ttb_t::iterator itr
+, mpz_t& pcin, mpz_t& pcout ){
+	Top_Ttb_t::iterator sub;
+	mpz_t mask, result;
+	mpz_init( mask );
+	mpz_init( result );
+	for( int i=0; i<pTtb->nLine; i++ ){
+		int InTrue = mpz_tstbit( pcin, i ); 
+		int OutTrue= mpz_tstbit( pcout, i );
+		if( (Direction? OutTrue: InTrue) == SetVal )
+			continue;
+		if( InTrue == OutTrue )
+			continue;
+		mpz_t& Target = (Direction)? pcout: pcin;
+		mpz_combit( Target, i );
+		mpz_set( mask, Target );
+		mpz_clrbit( mask, i );
+		//use mask to encode a gate
+		if( Direction ){
+			Rev.push_front( tRevNtk::value_type() );
+			Rev.front().resize( pTtb->nLine, '-' );
+			Rev.front()[i] = 'X';
+		} else {
+			Rev.push_back( tRevNtk::value_type() );
+			Rev.back().resize( pTtb->nLine, '-' );
+			Rev.back()[i] = 'X';
+		}
+		for( int j=0; j<pTtb->nLine; j++ ){
+			if( j==i )
+				continue;
+			if( mpz_tstbit( mask, j ) ){
+				if( Direction )
+					Rev.front()[j] = '+';
+				else
+					Rev.back()[j] = '+';
+			}
+		}
+		//flip bit
+		for( sub = itr + 1; sub != pTtb->end(); sub++ ){
+			mpz_t& SubTarget = (Direction)? sub->second: sub->first;
+			mpz_and( result, mask, SubTarget );
+			if( mpz_cmp( result, mask ) == 0 )
+				mpz_combit( SubTarget, i );
+		}
+	}
+	mpz_clear( mask );
+	mpz_clear( result );
+}
+int Top_Synthesis( tRevNtk& Rev, Top_Ttb_t * pTtb, int SetVal, int Direction, Top_Ttb_t::iterator itr ){
+	Top_Ttb_t::iterator sub;
+	mpz_t mask, result;
+	mpz_init( mask );
+	mpz_init( result );
+	for( int i=0; i<pTtb->nLine; i++ ){
+		int InTrue = mpz_tstbit( itr->first, i ); 
+		int OutTrue= mpz_tstbit( itr->second, i );
+		if( (Direction? OutTrue: InTrue) == SetVal )
+			continue;
+		if( InTrue == OutTrue )
+			continue;
+		mpz_t& Target = (Direction)? itr->second: itr->first;
+		mpz_combit( Target, i );
+		mpz_set( mask, Target );
+		mpz_clrbit( mask, i );
+		//use mask to encode a gate
+		if( Direction ){
+			Rev.push_front( tRevNtk::value_type() );
+			Rev.front().resize( pTtb->nLine, '-' );
+			Rev.front()[i] = 'X';
+		} else {
+			Rev.push_back( tRevNtk::value_type() );
+			Rev.back().resize( pTtb->nLine, '-' );
+			Rev.back()[i] = 'X';
+		}
+		for( int j=0; j<pTtb->nLine; j++ ){
+			if( j==i )
+				continue;
+			if( mpz_tstbit( mask, j ) ){
+				if( Direction )
+					Rev.front()[j] = '+';
+				else
+					Rev.back()[j] = '+';
+			}
+		}
+		//flip bit
+		for( sub = itr + 1; sub != pTtb->end(); sub++ ){
+			mpz_t& SubTarget = (Direction)? sub->second: sub->first;
+			mpz_and( result, mask, SubTarget );
+			if( mpz_cmp( result, mask ) == 0 )
+				mpz_combit( SubTarget, i );
+		}
+	}
+	mpz_clear( mask );
+	mpz_clear( result );
 }
 
 tRevNtk * Top_TtbToRev( Top_Ttb_t * pTtb ){
@@ -414,9 +583,19 @@ tRevNtk * Top_TtbToRev( Top_Ttb_t * pTtb ){
 		if( mpz_cmp( itr->first, itr->second ) == 0 )
 			continue;
 		;
+		int SetVal, Direction;
+		SetVal = 1;
+		Direction = 1;
+		Top_Synthesis( Rev, pDup, SetVal, Direction, itr );
+		SetVal = 0;
+		Top_Synthesis( Rev, pDup, SetVal, Direction, itr );
+		/**
 		for( int i=0; i<pDup->nLine; i++ ){
-			if( mpz_tstbit( itr->first, i ) 
-				== mpz_tstbit(itr->second, i ) )
+			int InTrue = mpz_tstbit( itr->first, i ); 
+			int OutTrue= mpz_tstbit( itr->second, i );
+			if( InTrue == 0 )
+				continue;
+			if( InTrue == OutTrue )
 				continue;
 			mpz_combit( itr->second, i );
 			mpz_set( mask, itr->second );
@@ -438,6 +617,33 @@ tRevNtk * Top_TtbToRev( Top_Ttb_t * pTtb ){
 					mpz_combit( sub->second, i );
 			}
 		}
+		for( int i=0; i<pDup->nLine; i++ ){
+			int InTrue = mpz_tstbit( itr->first, i ); 
+			int OutTrue= mpz_tstbit( itr->second, i );
+			if( InTrue == 1 )
+				continue;
+			if( InTrue == OutTrue )
+				continue;
+			mpz_combit( itr->second, i );
+			mpz_set( mask, itr->second );
+			mpz_clrbit( mask, i );
+			//use mask to encode a gate
+			Rev.push_front( tRevNtk::value_type() );
+			Rev.front().resize( pDup->nLine, '-' );
+			Rev.front()[i] = 'X';
+			for( int j=0; j<pDup->nLine; j++ ){
+				if( j==i )
+					continue;
+				if( mpz_tstbit( mask, j ) )
+					Rev.front()[j] = '+';
+			}
+			//flip bit
+			for( sub = itr + 1; sub != pDup->end(); sub++ ){
+				mpz_and( result, mask, sub->second );
+				if( mpz_cmp( result, mask ) == 0 )
+					mpz_combit( sub->second, i );
+			}
+		}/**/
 	}
 	mpz_clear(mask);
 	mpz_clear(result);
@@ -472,6 +678,13 @@ tRevNtk * Top_TtbToRev_Bi( Top_Ttb_t * pTtb ){
 		if( hamdist[0]<=hamdist[1] ){
 			//std::cout<<">>1\n";\
 			pDup->print(std::cout);
+			int SetVal, Direction;
+			SetVal = 1;
+			Direction = 1;
+			Top_Synthesis( Rev, pDup, SetVal, Direction, itr );
+			SetVal = 0;
+			Top_Synthesis( Rev, pDup, SetVal, Direction, itr );
+			/**
 			for( int i=0; i<pDup->nLine; i++ ){
 				if( mpz_tstbit( itr->first, i ) 
 					== mpz_tstbit(itr->second, i ) )
@@ -496,13 +709,22 @@ tRevNtk * Top_TtbToRev_Bi( Top_Ttb_t * pTtb ){
 						mpz_combit( sub->second, i );
 				}
 			}
-
+			/**/
 			//pDup->print(std::cout);\
 			std::cout<<"<<1\n";
 		} else {
 			std::sort( itr, pDup->end(), Tte::cmptor_second() );
 			//std::cout<<">>2\n";\
 			pDup->print(std::cout);
+			int SetVal, Direction;/**/
+			SetVal = 1;
+			Direction = 0;
+			Top_Synthesis( RevInv, pDup, SetVal, Direction, itr );
+			SetVal = 0;
+			Top_Synthesis( RevInv, pDup, SetVal, Direction, itr );
+
+			std::sort( itr, pDup->end(), Tte::cmptor_first() );
+			/**
 			for( int i=0; i<pDup->nLine; i++ ){
 				if( mpz_tstbit( itr->first, i ) 
 					== mpz_tstbit(itr->second, i ) )
@@ -528,6 +750,7 @@ tRevNtk * Top_TtbToRev_Bi( Top_Ttb_t * pTtb ){
 				}
 			}
 			std::sort( itr, pDup->end(), Tte::cmptor_first() );
+			/**/
 			//pDup->print(std::cout);\
 			std::cout<<"<<2\n";
 		}

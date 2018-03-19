@@ -78,9 +78,11 @@ int main( int argc, char * argv[] ){
 	else\
 		printf("Spec is correctly implemented.\n");
 	clk_end = clock();
+	//pRev->print(std::cout);
 	printf("(Toffli#,Time): %15d %8.3f\n"
 		, pRev->size()
 		, (double) (clk_end- clk_start)/CLOCKS_PER_SEC );
+	//LogPrint( std::cout );
 	delete pTtb;
 	delete pRev;
 }
