@@ -29,22 +29,49 @@ END=$(( $ID_BEGIN + $FILE_NUM - 1))
 
 INC=10
 PERCENT=$INC
+IS_ALLRAND=_allrand
+
 for COUNTER in $(seq ${INC} 100)
 do
 	BIDC_LOG="m0_p${POWER}_${PERCENT}.log"
-	BI_LOG="m1_p${POWER}_${PERCENT}.log"
 	touch ./log/${BIDC_LOG}
-	touch ./log/${BI_LOG}
-	for FILE in $( ls ${DIR}/*_p${POWER}_${PERCENT}_incmp.spec );
+	for FILE in $( ls ${DIR}/*_p${POWER}_${PERCENT}${IS_ALLRAND}_incmp.spec );
 	do
 		#echo "$ID"
 		./$PROGRAM $FILE >> ./log/${BIDC_LOG}
 	done
 	
-	for FILE in $( ls ${DIR}/*_p${POWER}_${PERCENT}_cmp.spec );
+	BI_LOG="m1_p${POWER}_${PERCENT}.log"
+	touch ./log/${BI_LOG}
+	for FILE in $( ls ${DIR}/*_p${POWER}_${PERCENT}${IS_ALLRAND}_cmp.spec );
 	do
 		#echo "$ID"
 		./$PROGRAM ${FILE} 1 >> ./log/${BI_LOG}
+	done
+
+
+	PC_LOG="m2_p${POWER}_${PERCENT}.log"
+	touch ./log/${PC_LOG}
+	for FILE in $( ls ${DIR}/*_p${POWER}_${PERCENT}${IS_ALLRAND}_incmp.spec );
+	do
+		#echo "$ID"
+		./$PROGRAM ${FILE} 2 >> ./log/${PC_LOG}
+	done
+
+	GBI_LOG="m3_p${POWER}_${PERCENT}.log"
+	touch ./log/${GBI_LOG}
+	for FILE in $( ls ${DIR}/*_p${POWER}_${PERCENT}${IS_ALLRAND}_incmp.spec );
+	do
+		#echo "$ID"
+		./$PROGRAM ${FILE} 3 >> ./log/${GBI_LOG}
+	done
+
+	FCMP_LOG="mf_p${POWER}_${PERCENT}.log"
+	touch ./log/${FCMP_LOG}
+	for FILE in $( ls ${DIR}/*_p${POWER}_${PERCENT}${IS_ALLRAND}_fcmp.spec );
+	do
+		#echo "$ID"
+		./$PROGRAM ${FILE} 1 >> ./log/${FCMP_LOG}
 	done
 	#echo $PERCENT
 	PERCENT=$(( $PERCENT + $INC ))
@@ -52,3 +79,4 @@ do
 		then break
 	fi
 done
+
