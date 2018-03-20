@@ -108,7 +108,7 @@ tRevNtk * Top_TtbToRev_Bi_Core( Top_Ttb_t * pTtb ){
 	std::vector<Top_Mpz_t> OG;
 
 	tRevNtk * pRev = new tRevNtk;
-	Top_Ttb_t::iterator itr, sub, itr2;
+	Top_Ttb_t::iterator itr, sub, itr2, itr2min;
 	tRevNtk & Rev = * pRev;
 	tRevNtk RevInv;
 	mpz_t mask, result;
@@ -127,12 +127,18 @@ tRevNtk * Top_TtbToRev_Bi_Core( Top_Ttb_t * pTtb ){
 //		if( mpz_cmp( itr->first, itr->second ) == 0 )
 //			continue;
 //		;
+		for( itr2min = itr, itr2 = itr; itr2 != pDup->end(); itr2++ ){
+			if( mpz_cmp( itr2->second, itr2min->second )<0 )
+				itr2min = itr2;
+		}
 
-		int res = mpz_cmp( itr->first, *OG[Gmin].obj );
+		//int res = mpz_cmp( itr->first, *OG[Gmin].obj );
+		int res = mpz_cmp( itr->first, itr2min->second );
 		bool IsForward = true;
 		if( res == 0 ){
-			itr2 = pDup->find_second( 
+			//itr2 = pDup->find_second( \
 				itr, pDup->end(), *OG[Gmin].obj );
+			itr2 = itr2min;
 			mp_bitcnt_t hamdist[2];
 			hamdist[0] = mpz_hamdist( itr ->first, itr ->second );
 			hamdist[1] = mpz_hamdist( itr2->first, itr2->second );
@@ -222,7 +228,7 @@ tRevNtk * Top_TtbToRev_Bi_Core( Top_Ttb_t * pTtb ){
 			pDup->print(std::cout);\
 			std::cout<<"<<2\n";
 		}
-		std::sort( OG.begin()+ Gmin, OG.end(), Top_Mpz_t::cmptor() );
+		//std::sort( OG.begin()+ Gmin, OG.end(), Top_Mpz_t::cmptor() );
 
 	}
 	mpz_clear(mask);
