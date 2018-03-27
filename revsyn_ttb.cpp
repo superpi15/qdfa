@@ -35,6 +35,7 @@ Top_Ttb_t * Ttb_ReadSpec( char * FileName ){
 		<< pRet->back().second<<"("<< output<<")"<<std::endl;
 	}
 	Top_Ttb_t::iterator cur, next;
+	std::sort( pRet->begin(), pRet->end(), Tte::cmptor_first() );
 	for( cur = pRet->begin(); cur != pRet->end(); cur ++ ){
 		next = cur+1;
 		if( next == pRet->end() )
@@ -44,6 +45,7 @@ Top_Ttb_t * Ttb_ReadSpec( char * FileName ){
 			return NULL;
 		}
 	}
+	//std::cout << pRet->size()<<":"<<std::endl; exit(0);
 	return pRet;
 }
 
@@ -80,8 +82,12 @@ tRevNtk * Top_TtbToRev_DC( Top_Ttb_t * pTtb ){
 	}
 	//pIn->print(std::cout);
 	//pOut->print(std::cout);
+
+	//std::cout << pIn->size()<<":"<<std::endl; exit(0);
 	pRevIn  = Top_TtbToRev( pIn  );
 	pRevOut = Top_TtbToRev( pOut );
+	
+
 	//printf("In half\n");\
 	pRevIn->print(std::cout);\
 	printf("Out half\n");\
@@ -582,7 +588,7 @@ tRevNtk * Top_TtbToRev( Top_Ttb_t * pTtb ){
 	tRevNtk * pRev = new tRevNtk;
 	tRevNtk & Rev = * pRev;
 	mpz_t mask, result;
-
+//std::cout<<":"<<std::endl; exit(0);
 	mpz_init(mask);
 	mpz_init(result);
 	for( itr = pDup->begin(); itr != pDup->end(); itr ++ ){
