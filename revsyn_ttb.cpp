@@ -547,9 +547,24 @@ int Top_Synthesis( tRevNtk& Rev, Top_Ttb_t * pTtb, int SetVal, int Direction, To
 		if( InTrue == OutTrue )
 			continue;
 		mpz_t& Target = (Direction)? itr->second: itr->first;
+
+		//Correction
+		/**/
+		if( Direction && SetVal )
+			mpz_set( mask, itr->second );
+		else
+		if( Direction && !SetVal )
+			mpz_set( mask, itr->first );
+		else
+		if( !Direction && SetVal )
+			mpz_set( mask, itr->first );
+		else
+			mpz_set( mask, itr->second );
+		/**/
+
 		mpz_combit( Target, i );
-		mpz_set( mask, Target );
-		mpz_clrbit( mask, i );
+		//mpz_set( mask, Target );  //original
+		//mpz_clrbit( mask, i );
 		//use mask to encode a gate
 		if( Direction ){
 			Rev.push_front( tRevNtk::value_type() );
