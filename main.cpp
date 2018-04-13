@@ -69,6 +69,8 @@ int main( int argc, char * argv[] ){
 		pRev = Top_TtbToRev_PseudoCare(pTtb);
 	else if( mode == 3 )
 		pRev = Top_TtbToRev_Bi_Core(pTtb);
+	else if( mode == 4 )
+		pRev = Top_GBDL(pTtb);
 	else
 		pRev = Top_TtbToRev(pTtb);
 	//pRev->print(std::cout);

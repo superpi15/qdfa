@@ -245,6 +245,30 @@ tRevNtk * Top_TtbToRev_Bi_Core( Top_Ttb_t * pTtb ){
 	return pRev;
 }
 
+//Put all patterns into map of hamming weight
+void ComputeHWMap( Top_Ttb_t * pTtb, mHW& HW ){
+	for( int i=0; i<pTtb->size(); i ++ ){
+		int hw;
+		Tte& TteCur = (*pTtb)[i];
+		hw = mpz_popcount( TteCur.first );
+		HW[hw].push_back( Pth(i,Pth::in) );
+		hw = mpz_popcount( TteCur.second );
+		HW[hw].push_back( Pth(i,Pth::out) );
+	}
+}
+
+
+tRevNtk * Top_GBDL( Top_Ttb_t * pTtb ){
+	Top_Ttb_t * pDup = pTtb->Duplicate();
+	tRevNtk * pRev = new tRevNtk;
+	tRevNtk & Rev = * pRev;
+	tRevNtk RevInv;
+	
+	mHW HW;
+	ComputeHWMap( pTtb, HW );
+	print_mHW( std::cout, HW, pTtb );
+	exit(0);
+}
 
 bool Determine_Pseudo_Care_Output(
 	std::vector<Top_Mpz_t>::iterator first,
