@@ -246,27 +246,65 @@ tRevNtk * Top_TtbToRev_Bi_Core( Top_Ttb_t * pTtb ){
 }
 
 //Put all patterns into map of hamming weight
-void ComputeHWMap( Top_Ttb_t * pTtb, mHW& HW ){
-	for( int i=0; i<pTtb->size(); i ++ ){
+void ComputeHWMap(
+Top_Ttb_t::iterator first, Top_Ttb_t * pTtb, mHW& HW ){
+	Top_Ttb_t::iterator itr;
+	for( itr = first; itr != pTtb->end(); itr ++ ){
 		int hw;
-		Tte& TteCur = (*pTtb)[i];
+		Tte& TteCur = *itr;
+		int pos = itr- pTtb->begin();
 		hw = mpz_popcount( TteCur.first );
-		HW[hw].push_back( Pth(i,Pth::in) );
+		HW[hw].push_back( Pth(pos,Pth::in) );
 		hw = mpz_popcount( TteCur.second );
-		HW[hw].push_back( Pth(i,Pth::out) );
+		HW[hw].push_back( Pth(pos,Pth::out) );
 	}
 }
 
+void LegalFixCand( Top_Ttb_t * pTtb, mHW& HW, vPth& Cands ){
+	mHW::iterator itr;
+	for( itr = HW.begin(); itr != HW.end(); itr ++ ){
+		vPth& Unfix = itr->second;
+		vPth::iterator jitr, kitr;
+		for( jitr = Unfix.begin(); jitr != Unfix.end(); jitr++ ){
+			bool is_contain = false;
+			for( kitr = Cands.begin(); kitr != Cands.end(); kitr++ ){
+				is_contain = Pth::Contain( pTtb )( *kitr, *jitr );
+				if( is_contain )
+					break;
+			}
+			if( !is_contain || Cands.empty() ){
+				Cands.push_back( *jitr );
+			}
+		}
+	}
+}
 
 tRevNtk * Top_GBDL( Top_Ttb_t * pTtb ){
+	Top_Ttb_t::iterator itr;
 	Top_Ttb_t * pDup = pTtb->Duplicate();
 	tRevNtk * pRev = new tRevNtk;
 	tRevNtk & Rev = * pRev;
 	tRevNtk RevInv;
-	
-	mHW HW;
-	ComputeHWMap( pTtb, HW );
-	print_mHW( std::cout, HW, pTtb );
+	for( itr = pTtb->begin(); itr != pTtb->end(); itr ++ ){	
+		mHW HW;
+		ComputeHWMap( itr, pTtb, HW );
+		//print_mHW( std::cout, HW, pTtb );
+		vPth Cands;
+		LegalFixCand( pTtb, HW, Cands );
+		
+		int min_hdist = pTtb->nLine+1;
+		vPth::iterator tarItr = Cands.end();
+		for( vPth::iterator pitr = Cands.begin();
+			pitr != Cands.end(); pitr++ ){
+			Pth pin(pitr->pos,Pth::in), pout(pitr->pos,Pth::out);
+			int hdist = mpz_hamdist(
+				pin.get_mpz(pTtb), pout.get_mpz(pTtb) );
+			if( hdist < min_hdist ){
+				min_hdist = hdist;
+				tarItr = pitr;
+			}
+		}
+	}
 	exit(0);
 }
 

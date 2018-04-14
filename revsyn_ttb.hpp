@@ -43,7 +43,49 @@ public:
 	} eio;
 	eio io : 2;
 	Pth( int npos, eio nio ): pos(npos),io(nio){}
+	struct Contain {
+		Top_Ttb_t * pTtb;
+		Contain( Top_Ttb_t * npTtb ):pTtb(npTtb){}
+		bool operator()( const Pth& A, const Pth& B )const{
+			Top_Ttb_t& Ttb = *pTtb;
+			mpz_t& mA = 
+				A.io==Pth::in
+				? Ttb[A.pos].first
+				: Ttb[A.pos].second;
+			mpz_t& mB = 
+				B.io==Pth::in
+				? Ttb[B.pos].first
+				: Ttb[B.pos].second;
+			return ContainTest()( mA, mB );
+		}
+	};
+	struct PrintObj{
+		Top_Ttb_t * pTtb;
+		Pth * _self;
+		PrintObj( Top_Ttb_t * npTtb, Pth * nP ):pTtb(npTtb),_self(nP){}
+	};
+	PrintObj operator()( Top_Ttb_t * pTtb ){
+		return PrintObj(pTtb,this);
+	}
+	mpz_t& get_mpz( Top_Ttb_t * pTtb ){
+		return io==in? (*pTtb)[pos].first: (*pTtb)[pos].second;
+	}
 };
+
+inline
+std::ostream& operator<<( std::ostream& ostr, Pth::PrintObj A ){
+	int pos = A._self->pos;
+	int dim = A.pTtb->nLine;
+	Pth::eio io  = A._self->io;
+	ostr<<(io==Pth::in?"(i)":"(o)");
+	ostr.fill('0');
+	ostr.width(dim);
+	ostr<< mpz_class( 
+		io==Pth::in
+		? (*A.pTtb)[pos].first
+		: (*A.pTtb)[pos].second ).get_str(2) <<" ";
+	return ostr;
+}
 
 typedef std::vector<Pth> vPth;	//
 typedef std::map<int,vPth> mHW; // Hamming Weight map
@@ -57,13 +99,7 @@ void print_mHW( std::ostream& ostr, mHW& HW, Top_Ttb_t * pTtb ){
 		for( int i=0; i<itr->second.size(); i++ ){
 			int pos = itr->second[i].pos;
 			Pth::eio io  = itr->second[i].io;
-			ostr<<(io==Pth::in?"(i)":"(o)");
-			ostr.fill('0');
-			ostr.width(dim);
-			ostr<< mpz_class( 
-				io==Pth::in
-				? (*pTtb)[pos].first
-				: (*pTtb)[pos].second ).get_str(2) <<" ";
+			ostr<< itr->second[i](pTtb)<<" ";
 		}
 		ostr<<std::endl;
 	}
