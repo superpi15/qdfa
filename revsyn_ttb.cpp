@@ -280,32 +280,80 @@ void LegalFixCand( Top_Ttb_t * pTtb, mHW& HW, vPth& Cands ){
 }
 
 tRevNtk * Top_GBDL( Top_Ttb_t * pTtb ){
-	Top_Ttb_t::iterator itr;
+	Top_Ttb_t::iterator itr, opItr;
 	Top_Ttb_t * pDup = pTtb->Duplicate();
 	tRevNtk * pRev = new tRevNtk;
 	tRevNtk & Rev = * pRev;
 	tRevNtk RevInv;
-	for( itr = pTtb->begin(); itr != pTtb->end(); itr ++ ){	
+	for( itr = pDup->begin(); itr != pDup->end(); itr ++ ){	
 		mHW HW;
-		ComputeHWMap( itr, pTtb, HW );
-		//print_mHW( std::cout, HW, pTtb );
+		ComputeHWMap( itr, pDup, HW );
+		//print_mHW( std::cout, HW, pDup );
 		vPth Cands;
-		LegalFixCand( pTtb, HW, Cands );
+		LegalFixCand( pDup, HW, Cands );
 		
-		int min_hdist = pTtb->nLine+1;
+		int min_hdist = pDup->nLine+1;
 		vPth::iterator tarItr = Cands.end();
 		for( vPth::iterator pitr = Cands.begin();
 			pitr != Cands.end(); pitr++ ){
+			//std::cout << (*pitr)(pDup)<<" ";
 			Pth pin(pitr->pos,Pth::in), pout(pitr->pos,Pth::out);
 			int hdist = mpz_hamdist(
-				pin.get_mpz(pTtb), pout.get_mpz(pTtb) );
+				pin.get_mpz(pDup), pout.get_mpz(pDup) );
+			if( hdist == min_hdist ){
+				if( 0<mpz_cmp
+					( pitr->get_mpz(pDup)
+					, tarItr->get_mpz(pDup)) ){
+					tarItr = pitr;
+				}
+			} 
+			else
 			if( hdist < min_hdist ){
 				min_hdist = hdist;
 				tarItr = pitr;
 			}
 		}
+		//std::cout<<"\n";
+		assert( tarItr != Cands.end() );
+		opItr = pDup->begin()+ tarItr->pos;
+		//std::cout << ((*tarItr)(pDup)) <<std::endl;
+		std::swap( *itr, *opItr );
+		//std::swap( *itr, *opItr );
+		//continue;
+		if( tarItr->io == Pth::in ){
+			//std::cout<<">>1\n";\
+			pDup->print(std::cout);
+
+			int SetVal, Direction;
+			SetVal = 1;
+			Direction= 1;
+			Top_Synthesis( Rev, pDup, SetVal, Direction, itr );
+			SetVal= 0;
+			Top_Synthesis( Rev, pDup, SetVal, Direction, itr );
+
+			//pDup->print(std::cout);\
+			std::cout<<"<<1\n";
+		} else {
+			//std::sort( opItr, pDup->end(), Tte::cmptor_second() );
+			//std::cout<<">>2\n";\
+			pDup->print(std::cout);
+			int SetVal, Direction;
+			SetVal = 1;
+			Direction= 0;
+			Top_Synthesis( RevInv, pDup, SetVal, Direction, itr );
+			SetVal= 0;
+			Top_Synthesis( RevInv, pDup, SetVal, Direction, itr );
+			//std::sort( itr, pDup->end(), Tte::cmptor_first() );
+			//std::cout<<">>\n";\
+			pDup->print(std::cout);\
+			std::cout<<"<<2\n";
+		}
 	}
-	exit(0);
+	pRev->splice( pRev->begin(), RevInv );
+	//pRev->print( std::cout );
+	delete pDup;
+	return pRev;
+
 }
 
 bool Determine_Pseudo_Care_Output(
