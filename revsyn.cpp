@@ -1,4 +1,5 @@
 #include "revsyn.hpp"
+#include <assert.h>
 
 tRevNtk * DCBasic( tSpec& Spec ){
 	if( Spec.CareLine.empty() ){
@@ -125,6 +126,25 @@ int ReadSpec( const char * FileName, tSpec& Spec ){
 	in.close();
 	return 1;
 }
+long long tRevNtk::QCost(){
+	long long allCost = 0;
+	for( iterator itr = begin(); itr != end(); itr ++ )
+		allCost += QCost( *itr );
+	return allCost;
+}
+long long tRevNtk::QCost( std::vector<char>& col ){
+	static int TableSz = 11;
+	static int CostTable[] = {0,1,1,5,13,29,61,125,253,509,1021};
+	long long icount = 0;
+	for( int i=0; i<col.size(); i++ ){
+		if( col[i] == '+' || col[i] == 'X' )
+			icount ++;
+		else
+			assert( col[i] == '-' );
+	}
+	return ( icount < TableSz )? CostTable[icount]: (1<<icount)-3;
+}
+
 /**
 int main( int argc, char * argv[] ){
 	if( argc!=2 )

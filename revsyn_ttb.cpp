@@ -649,13 +649,6 @@ int Top_Synthesis( tRevNtk& Rev, Top_Ttb_t * pTtb, int SetVal, int Direction, To
 	mpz_t mask, result;
 	mpz_init( mask );
 	mpz_init( result );
-	for( int i=0; i<pTtb->nLine; i++ ){
-		int InTrue = mpz_tstbit( itr->first, i ); 
-		int OutTrue= mpz_tstbit( itr->second, i );
-		if( (Direction? OutTrue: InTrue) == SetVal )
-			continue;
-		if( InTrue == OutTrue )
-			continue;
 		mpz_t& Target = (Direction)? itr->second: itr->first;
 
 		//Correction
@@ -669,8 +662,31 @@ int Top_Synthesis( tRevNtk& Rev, Top_Ttb_t * pTtb, int SetVal, int Direction, To
 		if( !Direction && SetVal )
 			mpz_set( mask, itr->first );
 		else
+		if( !Direction && !SetVal )
 			mpz_set( mask, itr->second );
 		/**/
+
+	for( int i=0; i<pTtb->nLine; i++ ){
+		int InTrue = mpz_tstbit( itr->first, i ); 
+		int OutTrue= mpz_tstbit( itr->second, i );
+		if( (Direction? OutTrue: InTrue) == SetVal )
+			continue;
+		if( InTrue == OutTrue )
+			continue;
+		//Correction
+		/**
+		//if( Direction && SetVal )\
+			mpz_set( mask, itr->second );\
+		else
+		if( Direction && !SetVal )
+			mpz_set( mask, itr->first );
+		else
+		//if( !Direction && SetVal )\
+			mpz_set( mask, itr->first );\
+		else
+		if( !Direction && !SetVal )
+			mpz_set( mask, itr->second );
+		**/
 
 		mpz_combit( Target, i );
 		//mpz_set( mask, Target );  //original

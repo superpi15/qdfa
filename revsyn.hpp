@@ -46,7 +46,9 @@ public:
 	 * wdot
 	 * not
 	*/
-	;
+	long long QCost();
+private:
+	long long QCost( std::vector<char>& col );
 };
 tRevNtk * DCBasic( tSpec& Spec );
 tRevNtk * ReversibleBasic( tSpec& Spec, bool UseDC = false );
