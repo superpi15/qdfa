@@ -80,7 +80,9 @@ int main( int argc, char * argv[] ){
 	else\
 		printf("Spec is correctly implemented.\n");
 	clk_end = clock();
-	pRev->print(std::cout);
+	//pRev->print(std::cout);
+	if( argc>3 )
+		pRev->WriteReal(argv[3]);
 	printf("(QCost): %15lld\n", pRev->QCost() );
 	printf("(Toffli#,Time): %15d %8.3f\n"
 		, pRev->size()

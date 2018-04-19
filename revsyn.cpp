@@ -145,6 +145,58 @@ long long tRevNtk::QCost( std::vector<char>& col ){
 	return ( icount < TableSz )? CostTable[icount]: (1<<icount)-3;
 }
 
+void tRevNtk::WriteReal( char * fName ){
+	std::ofstream ostr( fName, std::ios::out );
+	PrintReal(ostr);
+	ostr.close();
+}
+void tRevNtk::PrintReal( std::ostream& ostr ){
+	int nBit = front().size();
+	ostr<<".version 2.0"<<std::endl;
+	ostr<<".numvars "<<nBit<<std::endl;
+	ostr<<".variables ";
+	for( int i=0; i<nBit; i++ )
+		ostr<<"x"<<i<<" ";
+	ostr<< std::endl;
+
+	ostr<<".inputs ";
+	for( int i=0; i<nBit; i++ )
+		ostr<<"x"<<i<<" ";
+	ostr<< std::endl;
+	ostr<<".outputs ";
+	for( int i=0; i<nBit; i++ )
+		ostr<<"y"<<i<<" ";
+	ostr<< std::endl;
+	ostr<<".constants ";
+	for( int i=0; i<nBit; i++ )
+		ostr<<"-";
+	ostr<< std::endl;
+	ostr<<".garbage ";
+	for( int i=0; i<nBit; i++ )
+		ostr<<"-";
+	ostr<< std::endl;
+	ostr<<".begin"<<std::endl;
+	for( iterator itr=begin(); itr != end(); itr++ ){
+		int icount  = 0;
+		int flip 	= 0;
+		for( int i=0; i<itr->size(); i++ ){
+			if( (*itr)[i] != '-' )
+				icount++;
+			if( (*itr)[i] == 'X' )
+				flip = i;
+		}
+		if( icount == 0 )
+			continue;
+		ostr<<"t"<<icount<<" "<<"x"<<flip<<" ";
+		for( int i=0; i<itr->size(); i++ ){
+			if( (*itr)[i] == '+' )
+				ostr<<"x"<<i<<" ";
+		}
+		ostr<<std::endl;
+	}
+	ostr<<".end"<<std::endl;
+}
+
 /**
 int main( int argc, char * argv[] ){
 	if( argc!=2 )

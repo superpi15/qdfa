@@ -46,6 +46,8 @@ public:
 	 * wdot
 	 * not
 	*/
+	void WriteReal( char * fName );
+	void PrintReal( std::ostream& ostr );
 	long long QCost();
 private:
 	long long QCost( std::vector<char>& col );
