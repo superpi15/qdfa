@@ -263,7 +263,6 @@ tRevNtk * Top_TtbToRev_GBD_qca( Top_Ttb_t * pTtb ){
 			ComputeGate(
 				Direction, pDup, itr, vRankFreq, vControl
 				, vFixPath, vGate );
-			//Top_Synthesis( Rev, pDup, SetVal, Direction, itr );
 			MoveState( Direction, pDup, itr, vGate, vFixPath );
 			AddGate( Direction, pDup, &Rev, vGate, vFixPath );
 			SetVal= 0;
@@ -272,8 +271,6 @@ tRevNtk * Top_TtbToRev_GBD_qca( Top_Ttb_t * pTtb ){
 			ComputeGate(
 				Direction, pDup, itr, vRankFreq, vControl
 				, vFixPath, vGate );
-
-			//Top_Synthesis( Rev, pDup, SetVal, Direction, itr );
 			MoveState( Direction, pDup, itr, vGate, vFixPath );
 			AddGate( Direction, pDup, &Rev, vGate, vFixPath );
 			//pDup->print(std::cout);\
@@ -294,8 +291,6 @@ tRevNtk * Top_TtbToRev_GBD_qca( Top_Ttb_t * pTtb ){
 			ComputeGate(
 				Direction, pDup, itr, vRankFreq, vControl
 				, vFixPath, vGate );
-
-			//Top_Synthesis( RevInv, pDup, SetVal, Direction, itr );
 			MoveState( Direction, pDup, itr, vGate, vFixPath );
 			AddGate( Direction, pDup, &RevInv, vGate, vFixPath );
 			SetVal= 0;
@@ -304,8 +299,6 @@ tRevNtk * Top_TtbToRev_GBD_qca( Top_Ttb_t * pTtb ){
 			ComputeGate(
 				Direction, pDup, itr, vRankFreq, vControl
 				, vFixPath, vGate );
-
-			//Top_Synthesis( RevInv, pDup, SetVal, Direction, itr );
 			MoveState( Direction, pDup, itr, vGate, vFixPath );
 			AddGate( Direction, pDup, &RevInv, vGate, vFixPath );
 			//std::sort( itr, pDup->end(), Tte::cmptor_first() );
@@ -318,7 +311,7 @@ tRevNtk * Top_TtbToRev_GBD_qca( Top_Ttb_t * pTtb ){
 				vFreq[i] ++;
 		}
 
-		std::sort( itr, pDup->end(), Tte::cmptor_first() );
+		//std::sort( itr, pDup->end(), Tte::cmptor_first() );
 		std::sort( vRankFreq.begin(), vRankFreq.end(), FreqCmp() );
 		//std::cout<<std::endl;\
 		pDup->print(std::cout );\
@@ -332,4 +325,129 @@ tRevNtk * Top_TtbToRev_GBD_qca( Top_Ttb_t * pTtb ){
 	return pRev;
 }
 
+
+
+tRevNtk * Top_TtbToRev_GBDL_qca( Top_Ttb_t * pTtb ){
+	Top_Ttb_t::iterator itr, opItr;
+	Top_Ttb_t * pDup = pTtb->Duplicate();
+	tRevNtk * pRev = new tRevNtk;
+	tRevNtk & Rev = * pRev;
+	tRevNtk RevInv;
+	std::vector<int> vFreq( pDup->nLine, 0 );
+	std::vector<std::pair<int*,int> > vRankFreq( pDup->nLine );
+	for( int i=0; i<vRankFreq.size(); i++ ){
+		vRankFreq[i].first = &vFreq[i];
+		vRankFreq[i].second= i;
+	}
+	for( itr = pDup->begin(); itr != pDup->end(); itr ++ ){	
+		mHW HW;
+		ComputeHWMap( itr, pDup, HW );
+		//print_mHW( std::cout, HW, pDup );
+		vPth Cands;
+		LegalFixCand( pDup, HW, Cands );
+		
+		int min_hdist = pDup->nLine+1;
+		vPth::iterator tarItr = Cands.end();
+		for( vPth::iterator pitr = Cands.begin();
+			pitr != Cands.end(); pitr++ ){
+			//std::cout << (*pitr)(pDup)<<" ";
+			Pth pin(pitr->pos,Pth::in), pout(pitr->pos,Pth::out);
+			int hdist = mpz_hamdist(
+				pin.get_mpz(pDup), pout.get_mpz(pDup) );
+			if( hdist == min_hdist ){
+				//if( mpz_popcount(pitr->get_mpz(pDup) )\
+					< mpz_popcount(tarItr->get_mpz(pDup)) )\
+					tarItr = pitr;
+				if( 0<mpz_cmp\
+					( pitr->get_mpz(pDup)\
+					, tarItr->get_mpz(pDup)) ){\
+					tarItr = pitr;\
+				}
+			} 
+			else
+			if( hdist < min_hdist ){
+				min_hdist = hdist;
+				tarItr = pitr;
+			}
+		}
+		//std::cout<<"\n";
+		assert( tarItr != Cands.end() );
+		opItr = pDup->begin()+ tarItr->pos;
+		//std::cout << ((*tarItr)(pDup)) <<std::endl;
+		std::swap( *itr, *opItr );
+		//std::swap( *itr, *opItr );
+		//continue;
+		if( tarItr->io == Pth::in ){
+			//std::cout<<">>1\n";\
+			pDup->print(std::cout);
+
+			int SetVal, Direction;
+			SetVal = 1;
+			Direction= 1;
+			std::vector<mpz_class> vControl;
+			std::vector<int> vFixPath;
+			std::vector< std::vector<int> > vGate;
+			CountAddVal( 
+				SetVal, Direction, pDup, itr, vControl, vFixPath );
+			ComputeGate(
+				Direction, pDup, itr, vRankFreq, vControl
+				, vFixPath, vGate );
+			MoveState( Direction, pDup, itr, vGate, vFixPath );
+			AddGate( Direction, pDup, &Rev, vGate, vFixPath );
+			SetVal= 0;
+			CountAddVal( 
+				SetVal, Direction, pDup, itr, vControl, vFixPath );
+			ComputeGate(
+				Direction, pDup, itr, vRankFreq, vControl
+				, vFixPath, vGate );
+			MoveState( Direction, pDup, itr, vGate, vFixPath );
+			AddGate( Direction, pDup, &Rev, vGate, vFixPath );
+
+			//pDup->print(std::cout);\
+			std::cout<<"<<1\n";
+		} else {
+			//std::sort( opItr, pDup->end(), Tte::cmptor_second() );
+			//std::cout<<">>2\n";\
+			pDup->print(std::cout);
+			int SetVal, Direction;
+			SetVal = 1;
+			Direction= 0;
+			std::vector<mpz_class> vControl;
+			std::vector<int> vFixPath;
+			std::vector< std::vector<int> > vGate;
+			CountAddVal( 
+				SetVal, Direction, pDup, itr, vControl, vFixPath );
+			ComputeGate(
+				Direction, pDup, itr, vRankFreq, vControl
+				, vFixPath, vGate );
+			MoveState( Direction, pDup, itr, vGate, vFixPath );
+			AddGate( Direction, pDup, &RevInv, vGate, vFixPath );
+			SetVal= 0;
+			CountAddVal( 
+				SetVal, Direction, pDup, itr, vControl, vFixPath );
+			ComputeGate(
+				Direction, pDup, itr, vRankFreq, vControl
+				, vFixPath, vGate );
+			MoveState( Direction, pDup, itr, vGate, vFixPath );
+			AddGate( Direction, pDup, &RevInv, vGate, vFixPath );
+
+			//std::sort( itr, pDup->end(), Tte::cmptor_first() );
+			//std::cout<<">>\n";\
+			pDup->print(std::cout);\
+			std::cout<<"<<2\n";
+		}
+		for( int i=0; i<pDup->nLine; i++ ){
+			if( mpz_tstbit( itr->first, i ) )
+				vFreq[i] ++;
+		}
+
+		//std::sort( itr, pDup->end(), Tte::cmptor_first() );
+		std::sort( vRankFreq.begin(), vRankFreq.end(), FreqCmp() );
+	}
+	pRev->splice( pRev->begin(), RevInv );
+	//pRev->print( std::cout );
+	delete pDup;
+	return pRev;
+
+}
 

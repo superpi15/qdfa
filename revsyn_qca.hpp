@@ -33,6 +33,7 @@ void AddGate( int Direction
 , std::vector<int>& vFixPath );
 
 tRevNtk * Top_TtbToRev_GBD_qca( Top_Ttb_t * pTtb );
+tRevNtk * Top_TtbToRev_GBDL_qca( Top_Ttb_t * pTtb );
 
 struct FreqCmp {
 	bool operator()( const std::pair<int*,int>& A,

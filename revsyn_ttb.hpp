@@ -104,5 +104,8 @@ void print_mHW( std::ostream& ostr, mHW& HW, Top_Ttb_t * pTtb ){
 		ostr<<std::endl;
 	}
 }
+void LegalFixCand( Top_Ttb_t * pTtb, mHW& HW, vPth& Cands ); 
+void ComputeHWMap(
+Top_Ttb_t::iterator first, Top_Ttb_t * pTtb, mHW& HW );
 #endif
 

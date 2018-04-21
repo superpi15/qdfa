@@ -74,6 +74,8 @@ int main( int argc, char * argv[] ){
 		pRev = Top_GBDL(pTtb);
 	else if( mode == 5 )
 		pRev = Top_TtbToRev_GBD_qca(pTtb);
+	else if( mode == 6 )
+		pRev = Top_TtbToRev_GBDL_qca(pTtb);
 	else
 		pRev = Top_TtbToRev(pTtb);
 	//pRev->print(std::cout);
