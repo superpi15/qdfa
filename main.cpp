@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "revsyn_ttb.hpp"
+#include "revsyn_qca.hpp"
 #include <time.h>
 // Reversible DFA 
 /**
@@ -71,6 +72,8 @@ int main( int argc, char * argv[] ){
 		pRev = Top_TtbToRev_Bi_Core(pTtb);
 	else if( mode == 4 )
 		pRev = Top_GBDL(pTtb);
+	else if( mode == 5 )
+		pRev = Top_TtbToRev_GBD_qca(pTtb);
 	else
 		pRev = Top_TtbToRev(pTtb);
 	//pRev->print(std::cout);
@@ -83,7 +86,7 @@ int main( int argc, char * argv[] ){
 	//pRev->print(std::cout);
 	if( argc>3 )
 		pRev->WriteReal(argv[3]);
-	printf("(QCost): %15lld\n", pRev->QCost() );
+	printf("(BlackDot): %15lld\n", pRev->nBlackDot() );
 	printf("(Toffli#,Time): %15d %8.3f\n"
 		, pRev->size()
 		, (double) (clk_end- clk_start)/CLOCKS_PER_SEC );

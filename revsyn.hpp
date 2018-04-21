@@ -49,6 +49,7 @@ public:
 	void WriteReal( char * fName );
 	void PrintReal( std::ostream& ostr );
 	long long QCost();
+	int nBlackDot();
 private:
 	long long QCost( std::vector<char>& col );
 };

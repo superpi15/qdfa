@@ -187,14 +187,24 @@ void tRevNtk::PrintReal( std::ostream& ostr ){
 		}
 		if( icount == 0 )
 			continue;
-		ostr<<"t"<<icount<<" "<<"x"<<flip<<" ";
+		ostr<<"t"<<icount<<" ";
 		for( int i=0; i<itr->size(); i++ ){
 			if( (*itr)[i] == '+' )
 				ostr<<"x"<<i<<" ";
 		}
+		ostr<<"x"<<flip<<" ";
 		ostr<<std::endl;
 	}
 	ostr<<".end"<<std::endl;
+}
+
+int tRevNtk::nBlackDot(){
+	int nDot = 0;
+	for( iterator itr = begin(); itr != end(); itr++ )
+		for( int i=0; i<itr->size(); i++ )
+			if( (*itr)[i] == '+' )
+				nDot++;
+	return nDot;
 }
 
 /**

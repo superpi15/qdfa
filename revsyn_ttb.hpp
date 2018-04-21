@@ -104,6 +104,5 @@ void print_mHW( std::ostream& ostr, mHW& HW, Top_Ttb_t * pTtb ){
 		ostr<<std::endl;
 	}
 }
-
 #endif
 
