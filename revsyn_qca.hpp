@@ -10,6 +10,7 @@ bool SelectControl( Top_Ttb_t * pDup
 , mpz_t& cand
 , std::vector<std::pair<int*,int> >& vRankFreq
 , std::vector<int>& Gate
+, bool ForceDominate = false
 );
 void ComputeGate( int Direction
 , Top_Ttb_t * pDup
@@ -18,6 +19,18 @@ void ComputeGate( int Direction
 , std::vector<mpz_class>& vControl
 , std::vector<int>& vFixPath
 , std::vector< std::vector<int> >& vGate );
+
+void MoveState( int Direction
+, Top_Ttb_t * pDup
+, Top_Ttb_t::iterator begin
+, std::vector<std::vector<int> >& vGate
+, std::vector<int>& vFixPath );
+
+void AddGate( int Direction
+, Top_Ttb_t * pDup
+, tRevNtk * pNtk
+, std::vector<std::vector<int> >& vGate
+, std::vector<int>& vFixPath );
 
 tRevNtk * Top_TtbToRev_GBD_qca( Top_Ttb_t * pTtb );
 
