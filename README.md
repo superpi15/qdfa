@@ -2,8 +2,8 @@
 sh compile.sh
 
 # run
-For example: ./a.out revlib/revlib_spec/add6.pla 2
-./a.out [BENCHMARK] [MODE]
+* Format: ./a.out [BENCHMARK] [MODE]
+* For example: ./a.out revlib/revlib_spec/add6.pla 2
 + [BENCHMARK]:
 +         in path: revlib/revlib_spec
 + [MODE]: 
