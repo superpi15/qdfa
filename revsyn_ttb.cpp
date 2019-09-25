@@ -5,9 +5,9 @@
 #include <iostream>
 #include <algorithm> //Bidirection
 
-Top_Ttb_t * Ttb_ReadSpec( char * FileName ){
+
+Top_Ttb_t * Ttb_ReadSpecStream( std::istream& FileIn ){
 	Top_Ttb_t * pRet = new Top_Ttb_t;
-	std::ifstream FileIn( FileName, std::ios::in );
 	std::string line, input, output;
 	
 	int nLine = 0, Base = 2;
@@ -48,6 +48,15 @@ Top_Ttb_t * Ttb_ReadSpec( char * FileName ){
 	//std::cout << pRet->size()<<":"<<std::endl; exit(0);
 	return pRet;
 }
+
+
+Top_Ttb_t * Ttb_ReadSpec( char * FileName ){
+	Top_Ttb_t * pRet = new Top_Ttb_t;
+	std::ifstream FileIn( FileName, std::ios::in );
+	Ttb_ReadSpecStream(FileIn);
+	FileIn.close();
+}
+
 
 tRevNtk * Top_TtbToRev_Top( Top_Ttb_t * pTtb ){
 	/**

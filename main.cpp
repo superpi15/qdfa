@@ -63,19 +63,25 @@ int main( int argc, char * argv[] ){
 	printf("mode= %d\n",mode);
 	tRevNtk * pRev;
 	if( mode == 0 )
-		pRev = Top_TtbToRev_Top(pTtb);
+		pRev = Top_TtbToRev_Top(pTtb); 			// simple transformation-based alg
 	else if( mode == 1 )
-		pRev = Top_TtbToRev_Bi(pTtb);
+		pRev = Top_TtbToRev_Bi(pTtb); 			// bidriectional 
 	else if( mode == 2 )
 		pRev = Top_TtbToRev_PseudoCare(pTtb);
 	else if( mode == 3 )
-		pRev = Top_TtbToRev_Bi_Core(pTtb);
+		pRev = Top_TtbToRev_Bi_Core(pTtb); 		// generalized gdb 
 	else if( mode == 4 )
 		pRev = Top_GBDL(pTtb);
 	else if( mode == 5 )
 		pRev = Top_TtbToRev_GBD_qca(pTtb);
 	else if( mode == 6 )
 		pRev = Top_TtbToRev_GBDL_qca(pTtb);
+	else if( mode == 7 ) {
+		extern int enumk();
+		extern int enumk2();
+		enumk2();
+		return 0;
+	}
 	else
 		pRev = Top_TtbToRev(pTtb);
 	//pRev->print(std::cout);
