@@ -53,8 +53,9 @@ Top_Ttb_t * Ttb_ReadSpecStream( std::istream& FileIn ){
 Top_Ttb_t * Ttb_ReadSpec( char * FileName ){
 	Top_Ttb_t * pRet = new Top_Ttb_t;
 	std::ifstream FileIn( FileName, std::ios::in );
-	Ttb_ReadSpecStream(FileIn);
+	pRet = Ttb_ReadSpecStream(FileIn);
 	FileIn.close();
+	return pRet;
 }
 
 
